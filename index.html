@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Forge — конструктор промптів для нейромереж</title>
+<meta name="description" content="Збери точний запит для ChatGPT, Claude чи Gemini за пів хвилини. Обери роль, задачу й формат — промпт збереться наживо.">
+<meta name="theme-color" content="#0A2420">
+<!-- 🔗 заміни URL на свій домен після публікації -->
+<meta property="og:title" content="Prompt Forge — конструктор промптів для AI">
+<meta property="og:description" content="Збери ідеальний запит для нейромережі за пів хвилини.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://your-domain.com">
+<meta property="og:image" content="https://your-domain.com/preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FF7A45'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23231007'%3E%E2%97%86%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B2521; --bg-deep:#071D19; --surface:#10302A; --surface-2:#163E37;
+    --line:#22504826; --line:#1f4942; --line-soft:#173a34; --ink:#ECF4F0; --muted:#8DB0A7;
+    --accent:#FF7A45; --accent-2:#FFC24B; --accent-press:#E8632F;
+    --paper:#F4EDDE; --paper-2:#EBE1CC; --paper-ink:#211E15; --paper-line:#D5C9AE;
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;background:#0A2420}            /* solid dark fallback — page can never go white */
+  body{
+    margin:0;color:#ECF4F0;font-family:'Inter',system-ui,Segoe UI,sans-serif;line-height:1.5;
+    -webkit-font-smoothing:antialiased;min-height:100vh;position:relative;overflow-x:hidden;
+    background-color:#0A2420;                                /* literal hex, not var — survives sanitizers */
+    background-image:
+      radial-gradient(1200px 740px at 86% -14%, rgba(255,122,69,.16), transparent 60%),
+      radial-gradient(1000px 720px at -12% 116%, rgba(255,194,75,.10), transparent 58%),
+      radial-gradient(820px 640px at 50% 122%, rgba(46,160,130,.12), transparent 62%),
+      linear-gradient(180deg,#0C2925 0%,#0A2420 42%,#081E1A 100%);
+    background-attachment:fixed;
+  }
+  /* soft moving aurora behind everything */
+  .aurora{position:fixed;z-index:0;top:-22%;left:50%;width:86vw;height:62vh;transform:translateX(-50%);
+    pointer-events:none;filter:blur(85px);opacity:.55;
+    background:
+      radial-gradient(40% 50% at 28% 42%, rgba(255,122,69,.55), transparent 70%),
+      radial-gradient(46% 56% at 72% 48%, rgba(255,194,75,.38), transparent 70%),
+      radial-gradient(42% 52% at 52% 72%, rgba(40,150,130,.42), transparent 70%);
+    animation:drift 20s ease-in-out infinite alternate}
+  @keyframes drift{from{transform:translateX(-53%) translateY(0) scale(1)}to{transform:translateX(-46%) translateY(4%) scale(1.09)}}
+  /* faint dotted grid that fades toward the edges */
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6;
+    background-image:radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px);background-size:26px 26px;
+    -webkit-mask-image:radial-gradient(ellipse 85% 60% at 50% 0%, #000 28%, transparent 78%);
+            mask-image:radial-gradient(ellipse 85% 60% at 50% 0%, #000 28%, transparent 78%)}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  body>*{position:relative;z-index:1}
+  a{color:inherit}
+
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:18px clamp(16px,4vw,42px);
+    border-bottom:1px solid var(--line-soft);position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);
+    background:linear-gradient(var(--bg),rgba(11,37,33,.8))}
+  .brand{display:flex;align-items:center;gap:12px;font-family:'Space Grotesk';font-weight:700;letter-spacing:-.02em}
+  .spark{width:32px;height:32px;border-radius:9px;flex:none;color:#231007;display:grid;place-items:center;
+    font-size:17px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 0 0 4px rgba(255,122,69,.15)}
+  .brand b{font-size:17px}
+  .brand small{display:block;font-family:'Space Mono';font-weight:400;font-size:11px;color:var(--muted);margin-top:1px}
+  .nav{display:flex;gap:8px}
+  .nav a{font-family:'Space Mono';font-size:12.5px;color:var(--muted);text-decoration:none;
+    border:1px solid var(--line);padding:7px 13px;border-radius:999px;transition:.18s;white-space:nowrap}
+  .nav a:hover{color:var(--accent);border-color:var(--accent)}
+  .nav a.solid{background:var(--accent);color:#231007;border-color:var(--accent);font-family:'Space Grotesk';font-weight:600}
+  .nav a.solid:hover{background:var(--accent-press);color:#231007}
+  @media (max-width:560px){.nav a:not(.solid){display:none}}
+
+  .hero{padding:clamp(44px,7vw,82px) clamp(16px,4vw,42px) clamp(16px,2vw,24px);max-width:1180px;margin:0 auto}
+  .eyebrow{font-family:'Space Mono';font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);
+    display:inline-flex;align-items:center;gap:9px}
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--accent)}
+  .hero h1{font-family:'Space Grotesk';font-weight:700;letter-spacing:-.03em;line-height:1.0;
+    font-size:clamp(2.5rem,6.6vw,4.6rem);margin:.34em 0 .3em;max-width:14ch}
+  .hero h1 .hl{background:linear-gradient(120deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:var(--muted);font-size:clamp(1rem,1.6vw,1.18rem);max-width:54ch;margin:0}
+
+  .work{max-width:1180px;margin:0 auto;padding:clamp(20px,3vw,32px) clamp(16px,4vw,42px) 30px;
+    display:grid;grid-template-columns:1.05fr .95fr;gap:26px;align-items:start}
+  @media (max-width:880px){.work{grid-template-columns:1fr}}
+
+  .panel{background:linear-gradient(180deg,var(--surface),var(--bg-deep));border:1px solid var(--line);
+    border-radius:var(--radius);padding:clamp(18px,2.4vw,26px)}
+  .sec-h{font-family:'Space Grotesk';font-weight:600;font-size:13px;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 16px;display:flex;align-items:center;gap:9px}
+  .sec-h .num{font-family:'Space Mono';color:var(--accent);font-size:12px;border:1px solid var(--line);border-radius:6px;padding:1px 7px}
+
+  .presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+  .preset{font-size:13px;color:var(--ink);cursor:pointer;background:var(--surface-2);border:1px solid var(--line);
+    border-radius:999px;padding:8px 14px;transition:.16s}
+  .preset:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+
+  .field{margin-bottom:18px}
+  label{display:block;font-size:13.5px;font-weight:500;margin-bottom:7px}
+  label .opt{color:var(--muted);font-weight:400;font-size:12px}
+  select,input,textarea{width:100%;font-family:inherit;font-size:14.5px;color:var(--ink);background:var(--bg-deep);
+    border:1px solid var(--line);border-radius:10px;padding:12px 13px;transition:.16s}
+  textarea{resize:vertical;min-height:74px;line-height:1.45}
+  select:hover,input:hover,textarea:hover{border-color:#2c5e55}
+  select:focus,input:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,122,69,.16)}
+  ::placeholder{color:#6f9087}
+  select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238DB0A7' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:34px}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-size:13px;cursor:pointer;user-select:none;background:var(--bg-deep);border:1px solid var(--line);
+    border-radius:8px;padding:8px 12px;transition:.15s}
+  .chip:hover{border-color:#2c5e55}
+  .chip.on{background:rgba(255,122,69,.14);border-color:var(--accent);color:var(--accent)}
+
+  .toggle{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13.5px;color:var(--muted);margin-top:2px}
+  .toggle input{accent-color:var(--accent);width:16px;height:16px}
+
+  .actions{display:flex;gap:10px;margin-top:24px}
+  .btn{font-family:'Space Grotesk';font-weight:600;font-size:15px;cursor:pointer;border:none;border-radius:10px;padding:14px 18px;transition:.16s}
+  .btn-go{flex:1;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#231007}
+  .btn-go:hover{filter:brightness(1.05);transform:translateY(-1px)}
+  .btn-go:active{transform:translateY(0)}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .btn-ghost:hover{color:var(--ink);border-color:#2c5e55}
+
+  .out-wrap{position:sticky;top:92px}
+  @media (max-width:880px){.out-wrap{position:static}}
+  .live{font-family:'Space Mono';font-size:11px;color:var(--accent);display:inline-flex;align-items:center;gap:6px;margin-left:auto}
+  .live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(255,122,69,.6);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,122,69,.55)}70%{box-shadow:0 0 0 7px rgba(255,122,69,0)}100%{box-shadow:0 0 0 0 rgba(255,122,69,0)}}
+
+  .slip{background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);border-radius:6px;
+    position:relative;box-shadow:0 28px 60px -24px rgba(0,0,0,.65);overflow:hidden}
+  .slip::before,.slip::after{content:"";position:absolute;left:0;right:0;height:9px;
+    background:radial-gradient(circle at 6px -2px, transparent 6px, var(--paper) 6px) repeat-x;background-size:16px 9px}
+  .slip::before{top:-1px;transform:rotate(180deg)}
+  .slip::after{bottom:-1px}
+  .slip-in{padding:26px 24px 24px}
+  .slip-head{display:flex;align-items:center;justify-content:space-between;border-bottom:1.5px dashed var(--paper-line);
+    padding-bottom:12px;margin-bottom:16px}
+  .slip-head .ttl{font-family:'Space Mono';font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+  .slip-head .stamp{font-family:'Space Mono';font-size:11px;color:#8a7f63}
+  .prompt-text{font-family:'Space Mono';font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word;min-height:128px}
+  .prompt-text .empty{color:#9a8f74}
+  .prompt-text b{color:var(--accent-press);font-weight:700}
+  .caret{display:inline-block;width:8px;height:16px;background:var(--accent-press);margin-left:1px;vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .slip-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1.5px dashed var(--paper-line);
+    margin-top:16px;padding-top:13px;font-family:'Space Mono';font-size:11.5px;color:#8a7f63}
+  .meta{display:flex;gap:14px;flex-wrap:wrap}
+  .meta b{color:var(--paper-ink);font-weight:700}
+  .copy{font-family:'Space Grotesk';font-weight:600;font-size:13px;cursor:pointer;background:var(--paper-ink);color:var(--paper);
+    border:none;border-radius:8px;padding:9px 15px;transition:.16s;white-space:nowrap}
+  .copy:hover{background:#000}
+  .copy.done{background:#2e7d4f}
+
+  /* support section */
+  .support{max-width:1180px;margin:18px auto 0;padding:0 clamp(16px,4vw,42px)}
+  .support .head{text-align:center;margin-bottom:24px}
+  .support .head h2{font-family:'Space Grotesk';font-weight:700;letter-spacing:-.02em;font-size:clamp(1.6rem,3.4vw,2.2rem);margin:.2em 0 .25em}
+  .support .head p{color:var(--muted);margin:0;max-width:48ch;margin-inline:auto}
+  .sup-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media (max-width:880px){.sup-grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:480px){.sup-grid{grid-template-columns:1fr}}
+  .sup{background:linear-gradient(180deg,var(--surface),var(--bg-deep));border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px 20px;display:flex;flex-direction:column;gap:10px;transition:.18s}
+  .sup:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 20px 40px -26px rgba(255,122,69,.5)}
+  .sup .ic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;font-size:21px;
+    background:rgba(255,122,69,.12);border:1px solid var(--line)}
+  .sup h3{font-family:'Space Grotesk';font-weight:600;font-size:16px;margin:2px 0 0}
+  .sup p{color:var(--muted);font-size:13px;margin:0;flex:1}
+  .sup .go{margin-top:6px;font-family:'Space Grotesk';font-weight:600;font-size:13.5px;text-decoration:none;cursor:pointer;
+    color:var(--accent);display:inline-flex;align-items:center;gap:6px;border:none;background:none;padding:0;text-align:left}
+  .sup .go:hover{gap:9px;color:var(--accent-2)}
+
+  /* affiliate strip */
+  .partner-strip{max-width:1180px;margin:26px auto 0;padding:0 clamp(16px,4vw,42px)}
+  .partner-strip .inner{border:1px dashed var(--line);border-radius:var(--radius);padding:18px 22px;display:flex;
+    align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:rgba(255,122,69,.04)}
+  .partner-strip .inner span{font-size:14px}
+  .partner-strip .tag{font-family:'Space Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+  .partner-strip a{font-family:'Space Grotesk';font-weight:600;text-decoration:none;color:#231007;background:var(--accent);
+    padding:11px 18px;border-radius:9px;transition:.16s;white-space:nowrap}
+  .partner-strip a:hover{background:var(--accent-press)}
+
+  footer{max-width:1180px;margin:30px auto 0;padding:30px clamp(16px,4vw,42px) 46px;color:var(--muted);font-size:13.5px;
+    display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;border-top:1px solid var(--line-soft)}
+  footer a{color:var(--accent);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:var(--paper-ink);color:var(--paper);
+    font-family:'Space Mono';font-size:13px;padding:12px 18px;border-radius:10px;box-shadow:0 14px 34px -10px rgba(0,0,0,.6);
+    opacity:0;pointer-events:none;transition:.25s;z-index:60}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+  <div class="aurora" aria-hidden="true"></div>
+
+  <div class="bar">
+    <div class="brand">
+      <span class="spark">&#9670;</span>
+      <span><b>Prompt&nbsp;Forge</b><small>конструктор запитів для AI</small></span>
+    </div>
+    <nav class="nav">
+      <a href="#partner">партнерам</a>
+      <a class="solid" href="#support">Підтримати ☕</a>
+    </nav>
+  </div>
+
+  <section class="hero">
+    <span class="eyebrow">генератор промптів</span>
+    <h1>Збери <span class="hl">точний запит</span> для нейромережі за пів хвилини</h1>
+    <p>Обери роль, опиши задачу й формат — промпт збирається наживо, поки ти його редагуєш. Скопіюй і встав у ChatGPT, Claude, Gemini чи будь-яку іншу модель.</p>
+  </section>
+
+  <div class="work">
+    <div class="panel">
+      <h2 class="sec-h"><span class="num">01</span> Налаштування</h2>
+      <div class="presets" id="presets"></div>
+
+      <div class="field">
+        <label for="role">Роль для AI</label>
+        <select id="role">
+          <option value="професійний маркетолог і копірайтер">Маркетолог / Копірайтер</option>
+          <option value="Senior Fullstack розробник з 10-річним досвідом">Програміст (Senior)</option>
+          <option value="SMM-спеціаліст і експерт зі сценаріїв Reels та TikTok">SMM / Reels-спеціаліст</option>
+          <option value="SEO-спеціаліст">SEO-спеціаліст</option>
+          <option value="вчитель англійської мови з 10-річним стажем">Вчитель англійської</option>
+          <option value="бізнес-аналітик і стратег">Бізнес-аналітик</option>
+          <option value="професійний сценарист">Сценарист</option>
+          <option value="__custom__">&#9999;&#65039; Свій варіант…</option>
+        </select>
+      </div>
+
+      <div class="field" id="customRoleField" style="display:none">
+        <label for="customRole">Опиши роль власноруч</label>
+        <input type="text" id="customRole" placeholder="напр.: ментор зі стартапів у сфері FinTech">
+      </div>
+
+      <div class="field">
+        <label for="task">Що потрібно зробити?</label>
+        <input type="text" id="task" placeholder="напр.: написати продаючий пост про кросівки">
+      </div>
+
+      <div class="field">
+        <label for="context">Контекст і деталі <span class="opt">— необов'язково</span></label>
+        <textarea id="context" placeholder="аудиторія, обмеження, приклади, посилання, що вже відомо…"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="tone">Тон мовлення</label>
+        <select id="tone">
+          <option value="діловий, професійний">Діловий / професійний</option>
+          <option value="дружній, розмовний, з гумором та емодзі">Дружній / з гумором</option>
+          <option value="лаконічний і чіткий, без зайвої води">Лаконічний / без води</option>
+          <option value="експертний і переконливий">Експертний</option>
+          <option value="продаючий, із чітким закликом до дії">Продаючий / із CTA</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Формат відповіді <span class="opt">— можна обрати кілька</span></label>
+        <div class="chips" id="formats">
+          <span class="chip" data-v="оформ відповідь марковним списком">Списком</span>
+          <span class="chip" data-v="розпиши покроково">Покроково</span>
+          <span class="chip" data-v="подай у вигляді таблиці">Таблицею</span>
+          <span class="chip" data-v="будь стислим">Коротко</span>
+          <span class="chip" data-v="дай розгорнуту детальну відповідь">Детально</span>
+          <span class="chip" data-v="наведи конкретні приклади">З прикладами</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="lang">Мова відповіді</label>
+        <select id="lang">
+          <option value="українською мовою">Українською</option>
+          <option value="англійською мовою (English)">English</option>
+          <option value="польською мовою">Polski</option>
+          <option value="німецькою мовою">Deutsch</option>
+        </select>
+      </div>
+
+      <label class="toggle">
+        <input type="checkbox" id="ask" checked>
+        Дозволити моделі ставити уточнюючі запитання, якщо бракує даних
+      </label>
+
+      <div class="actions">
+        <button class="btn btn-go" id="go">Зібрати промпт</button>
+        <button class="btn btn-ghost" id="clear">Очистити</button>
+      </div>
+    </div>
+
+    <div class="out-wrap">
+      <h2 class="sec-h" style="padding-left:2px"><span class="num">02</span> Готовий промпт <span class="live">наживо</span></h2>
+      <div class="slip">
+        <div class="slip-in">
+          <div class="slip-head">
+            <span class="ttl">PROMPT &middot; FORGE</span>
+            <span class="stamp" id="stamp">&mdash;</span>
+          </div>
+          <div class="prompt-text" id="out"><span class="empty">Заповни задачу зліва — промпт зʼявиться тут і оновлюватиметься наживо.</span></div>
+          <div class="slip-foot">
+            <div class="meta">
+              <span><b id="wc">0</b> слів</span>
+              <span><b id="cc">0</b> символів</span>
+              <span>~<b id="tc">0</b> токенів</span>
+            </div>
+            <button class="copy" id="copy">Скопіювати</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== ПІДТРИМКА ПРОЄКТУ ===================== -->
+  <section class="support" id="support">
+    <div class="head">
+      <span class="eyebrow" style="justify-content:center">підтримати проєкт</span>
+      <h2>Інструмент безкоштовний. Тримається на вас.</h2>
+      <p>Якщо Prompt Forge зекономив тобі час — підтримай розвиток будь-яким зручним способом.</p>
+    </div>
+    <div class="sup-grid">
+      <div class="sup">
+        <div class="ic">&#127974;</div>
+        <h3>Монобанка</h3>
+        <p>Найшвидший спосіб — донат у пару тапів через Monobank.</p>
+        <!-- 🔗 встав посилання на свою банку: https://send.monobank.ua/jar/... -->
+        <a class="go" href="#" target="_blank" rel="noopener">Закинути на банку →</a>
+      </div>
+      <div class="sup">
+        <div class="ic">&#128142;</div>
+        <h3>Крипта</h3>
+        <p>TON або USDT (TRC-20). Натисни, щоб скопіювати адресу гаманця.</p>
+        <!-- 🔗 встав свою адресу гаманця замість значення data-wallet -->
+        <button class="go" id="copyWallet" data-wallet="UQxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">Скопіювати адресу →</button>
+      </div>
+      <div class="sup">
+        <div class="ic">&#9749;</div>
+        <h3>Buy Me a Coffee</h3>
+        <p>Разовий донат карткою — для тих, кому так зручніше.</p>
+        <!-- 🔗 встав свій профіль: https://buymeacoffee.com/... -->
+        <a class="go" href="#" target="_blank" rel="noopener">Купити каву →</a>
+      </div>
+      <div class="sup">
+        <div class="ic">&#128279;</div>
+        <h3>Поділитися</h3>
+        <p>Безкоштовно, але дуже допомагає. Кинь друзям або в канал.</p>
+        <button class="go" id="shareBtn">Скопіювати посилання →</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="partner-strip" id="partner">
+    <div class="inner">
+      <span><span class="tag">партнерська зона</span><br>Потрібен надійний хостинг для твоїх проєктів? Бери зі знижкою.</span>
+      <!-- 🔗 заміни # на своє партнерське посилання -->
+      <a href="#" target="_blank" rel="noopener">Отримати &minus;50%</a>
+    </div>
+  </div>
+
+  <footer>
+    <span>© 2026 Prompt Forge — зроблено в Україні 🇺🇦</span>
+    <span>Питання та ідеї: <a href="https://t.me/prompt_forge1" target="_blank" rel="noopener">@prompt_forge1</a></span>
+  </footer>
+
+  <div class="toast" id="toast">Скопійовано ✓</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const role=$('role'), customRole=$('customRole'), customField=$('customRoleField'),
+        task=$('task'), ctx=$('context'), tone=$('tone'), lang=$('lang'), ask=$('ask'),
+        out=$('out'), wc=$('wc'), cc=$('cc'), tc=$('tc'), stamp=$('stamp');
+  const chips=[].slice.call(document.querySelectorAll('#formats .chip'));
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const toast=$('toast');
+
+  function showToast(msg){ toast.textContent=msg; toast.classList.add('show');
+    clearTimeout(toast._t); toast._t=setTimeout(function(){toast.classList.remove('show');},1700); }
+
+  const presets=[
+    {name:'\uD83D\uDCE3 Пост для Telegram', role:0, task:'написати продаючий пост для Telegram-каналу', tone:4, fmt:['будь стислим'], lang:0},
+    {name:'\uD83C\uDFAC Сценарій Reels/TikTok', role:2, task:'написати сценарій короткого вірусного відео на 30 секунд', tone:1, fmt:['розпиши покроково'], lang:0},
+    {name:'\uD83D\uDC1E Фікс бага в коді', role:1, task:'знайти і виправити баг у наданому фрагменті коду та пояснити причину', tone:2, fmt:['розпиши покроково','наведи конкретні приклади'], lang:0},
+    {name:'\uD83D\uDED2 Опис товару', role:0, task:'написати опис товару для маркетплейсу', tone:4, fmt:['оформ відповідь марковним списком'], lang:0},
+    {name:'\uD83D\uDCE7 Холодний лист', role:0, task:'написати холодний лист потенційному клієнту', tone:0, fmt:['будь стислим'], lang:0},
+  ];
+  const pBox=$('presets');
+  presets.forEach(function(p){
+    const b=document.createElement('span'); b.className='preset'; b.textContent=p.name;
+    b.onclick=function(){
+      role.value=role.options[p.role].value; toggleCustom();
+      task.value=p.task; tone.value=tone.options[p.tone].value; lang.value=lang.options[p.lang].value;
+      chips.forEach(function(c){c.classList.toggle('on', p.fmt.indexOf(c.dataset.v)>-1);});
+      build(true); flash();
+    };
+    pBox.appendChild(b);
+  });
+
+  function toggleCustom(){ customField.style.display = role.value==='__custom__' ? 'block':'none'; }
+  role.addEventListener('change',function(){toggleCustom();build(false);});
+  chips.forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('on');build(false);});});
+  [customRole,task,ctx,tone,lang].forEach(function(el){el.addEventListener('input',function(){build(false);});});
+  ask.addEventListener('change',function(){build(false);});
+
+  function currentRole(){
+    if(role.value==='__custom__') return customRole.value.trim() || 'фахівець у потрібній сфері';
+    return role.value;
+  }
+  function buildText(){
+    const t=task.value.trim(); if(!t) return '';
+    const fmts=chips.filter(function(c){return c.classList.contains('on');}).map(function(c){return c.dataset.v;});
+    let l=[];
+    l.push('Дій як '+currentRole()+'.');
+    l.push('Твоє завдання: '+t+'.');
+    if(ctx.value.trim()) l.push('Контекст: '+ctx.value.trim()+'.');
+    l.push('Тон: '+tone.value+'.');
+    if(fmts.length) l.push('Формат: '+fmts.join('; ')+'.');
+    l.push('Відповідай '+lang.value+'.');
+    if(ask.checked) l.push('Якщо для якісного результату бракує інформації — спершу постав мені уточнюючі запитання.');
+    return l.join('\n\n');
+  }
+  function fmtHTML(text){
+    return text
+      .replace('Дій як','<b>Дій як</b>')
+      .replace('Твоє завдання:','<b>Твоє завдання:</b>')
+      .replace('Контекст:','<b>Контекст:</b>')
+      .replace('Тон:','<b>Тон:</b>')
+      .replace('Формат:','<b>Формат:</b>')
+      .replace('Відповідай','<b>Відповідай</b>');
+  }
+  function setMeta(text){
+    const words=text?text.trim().split(/\s+/).filter(Boolean).length:0;
+    wc.textContent=words; cc.textContent=text.length; tc.textContent=Math.ceil(text.length/4);
+    const d=new Date();
+    stamp.textContent=text?d.toLocaleDateString('uk-UA')+' '+d.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'}):'\u2014';
+  }
+
+  let typer=null;
+  function build(animate){
+    if(typer){clearInterval(typer);typer=null;}
+    const text=buildText();
+    if(!text){ out.innerHTML='<span class="empty">Заповни задачу зліва — промпт зʼявиться тут і оновлюватиметься наживо.</span>'; setMeta(''); return; }
+    setMeta(text);
+    if(!animate||reduce){ out.innerHTML=fmtHTML(text); return; }
+    let i=0; const step=Math.max(2,Math.ceil(text.length/110));
+    typer=setInterval(function(){
+      i+=step;
+      out.innerHTML = text.slice(0,i).replace(/</g,'&lt;') + '<span class="caret"></span>';
+      if(i>=text.length){ clearInterval(typer); typer=null; out.innerHTML=fmtHTML(text); }
+    },14);
+  }
+
+  function flash(){ if(window.matchMedia('(max-width:880px)').matches){ document.querySelector('.out-wrap').scrollIntoView({behavior:'smooth',block:'start'}); } }
+  $('go').onclick=function(){ build(true); flash(); };
+  $('clear').onclick=function(){
+    role.selectedIndex=0; toggleCustom(); customRole.value='';
+    task.value=''; ctx.value=''; tone.selectedIndex=0; lang.selectedIndex=0; ask.checked=true;
+    chips.forEach(function(c){c.classList.remove('on');}); build(false);
+  };
+  $('copy').onclick=function(){
+    if(!buildText()){ showToast('Спершу опиши задачу'); return; }
+    navigator.clipboard.writeText(out.innerText).then(function(){
+      const btn=$('copy'); btn.classList.add('done'); btn.textContent='Готово ✓'; showToast('Промпт скопійовано ✓');
+      setTimeout(function(){btn.classList.remove('done');btn.textContent='Скопіювати';},1700);
+    });
+  };
+
+  // support actions
+  $('copyWallet').onclick=function(){
+    navigator.clipboard.writeText(this.dataset.wallet).then(function(){showToast('Адресу гаманця скопійовано ✓');});
+  };
+  $('shareBtn').onclick=function(){
+    const url=location.href;
+    if(navigator.share){ navigator.share({title:'Prompt Forge',text:'Конструктор промптів для нейромереж',url:url}).catch(function(){}); }
+    else { navigator.clipboard.writeText(url).then(function(){showToast('Посилання скопійовано ✓');}); }
+  };
+
+  build(false);
+})();
+</script>
+</body>
+</html>
