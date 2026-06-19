@@ -3,797 +3,635 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARES Security — Професійна охорона у Миронівці</title>
+    <title>VIP Escort Paris – Преміальний супровід</title>
+    <!-- Font Awesome 6 (безкоштовна іконка) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        :root {
-            --primary-color: #1a252f;
-            --accent-color: #d4af37;
-            --text-dark: #2c3e50;
-            --text-light: #ffffff;
-            --bg-light: #f8f9fa;
-            --border-color: #e2e8f0;
-            --transition: all 0.3s ease;
-        }
-
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-sizing: border-box;
         }
 
         body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0b0b0b;
+            color: #e0dcd9;
             line-height: 1.6;
-            color: var(--text-dark);
-            background-color: var(--bg-light);
-        }
-
-        header {
-            background-color: var(--primary-color);
-            color: var(--text-light);
-            padding: 15px 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            border-bottom: 3px solid var(--accent-color);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
         .container {
-            width: 90%;
-            max-width: 1100px;
+            max-width: 1300px;
             margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* HEADER */
+        header {
+            background: #141212;
+            padding: 18px 0;
+            border-bottom: 1px solid #2a2525;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(4px);
         }
 
         .header-flex {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
         }
 
         .logo {
-            font-size: 26px;
-            font-weight: 800;
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: 4px;
+            color: #f5e7d9;
+            text-transform: uppercase;
+        }
+        .logo span {
+            font-weight: 600;
+            color: #d4af6b;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            font-weight: 400;
+            font-size: 16px;
             letter-spacing: 1px;
+        }
+        .nav-links a {
+            color: #bfb7ae;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .nav-links a:hover {
+            color: #d4af6b;
+        }
+
+        .header-contact {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 18px;
         }
-
-        .logo span {
-            color: var(--accent-color);
+        .header-contact i {
+            color: #d4af6b;
+            font-size: 18px;
         }
-
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 25px;
-        }
-
-        nav a {
-            color: var(--text-light);
+        .header-contact a {
+            color: #e0dcd9;
             text-decoration: none;
-            font-weight: 500;
-            transition: var(--transition);
             font-size: 15px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-weight: 400;
+        }
+        .header-contact a:hover {
+            color: #d4af6b;
         }
 
-        nav a:hover {
-            color: var(--accent-color);
+        /* Бургер-меню для мобільних */
+        .menu-toggle {
+            display: none;
+            font-size: 28px;
+            color: #d4af6b;
+            cursor: pointer;
         }
 
+        /* ГЕРОЙ */
         .hero {
-            background: linear-gradient(rgba(26, 37, 47, 0.8), rgba(26, 37, 47, 0.95)), url('https://images.unsplash.com/photo-1557597774-9d273605dfa9?auto=format&fit=crop&w=1200&q=80') no-repeat center center/cover;
-            color: var(--text-light);
-            padding: 120px 0;
-            text-align: center;
-            clip-path: polygon(0 0, 100% 0, 100% 95%, 0 100%);
+            padding: 70px 0 80px;
+            background: linear-gradient(135deg, #141010 0%, #1e1a1a 100%);
+            border-bottom: 1px solid #2f2828;
         }
-
-        .hero h1 {
+        .hero-grid {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 40px;
+        }
+        .hero-content {
+            flex: 1 1 400px;
+        }
+        .hero-content h1 {
             font-size: 48px;
-            margin-bottom: 20px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #f5e7d9;
+            line-height: 1.2;
+        }
+        .hero-content h1 strong {
+            color: #d4af6b;
+            font-weight: 500;
+        }
+        .hero-content p {
+            font-size: 18px;
+            margin: 28px 0 32px;
+            color: #b5aba1;
+            max-width: 550px;
+        }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .btn {
+            display: inline-block;
+            background: transparent;
+            border: 1px solid #d4af6b;
+            color: #d4af6b;
+            padding: 14px 38px;
+            font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 2px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .hero h1 span {
-            color: var(--accent-color);
-        }
-
-        .hero p {
-            font-size: 20px;
-            max-width: 850px;
-            margin: 0 auto 30px auto;
-            opacity: 0.9;
-        }
-
-        .section-title {
-            text-align: center;
-            font-size: 32px;
-            margin: 60px 0 40px 0;
-            position: relative;
-            padding-bottom: 15px;
-            text-transform: uppercase;
-            color: var(--primary-color);
-        }
-
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 4px;
-            background-color: var(--accent-color);
+            font-size: 14px;
+            text-decoration: none;
+            transition: 0.3s;
             border-radius: 2px;
         }
-
-        /* --- МАТРЬОШКИ (АКОРДЕОН) --- */
-        .accordion {
-            margin-bottom: 50px;
+        .btn-primary {
+            background: #d4af6b;
+            color: #0b0b0b;
+            border: 1px solid #d4af6b;
+        }
+        .btn-primary:hover {
+            background: #c09d55;
+            border-color: #c09d55;
+            color: #0b0b0b;
+        }
+        .btn-outline:hover {
+            background: #d4af6b;
+            color: #0b0b0b;
         }
 
-        .accordion-item {
-            background: #fff;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            transition: var(--transition);
-        }
-
-        .accordion-item:hover {
-            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
-
-        .accordion-header {
-            width: 100%;
-            text-align: left;
-            padding: 20px 25px;
-            background: none;
-            border: none;
-            cursor: pointer;
+        .hero-image {
+            flex: 1 1 350px;
+            background: #1e1919;
+            height: 320px;
+            border-radius: 6px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--primary-color);
-            transition: var(--transition);
+            justify-content: center;
+            color: #4a3f3a;
+            font-size: 20px;
+            letter-spacing: 2px;
+            border: 1px solid #332b2b;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="0,0 100,0 80,100 0,100" fill="%23221d1d" opacity="0.6"/><text x="25" y="55" font-family="Arial" font-size="12" fill="%235c4e42">Париж ✦ Еліт</text></svg>');
+            background-size: cover;
+            background-blend-mode: overlay;
         }
 
-        .accordion-header.active {
-            background-color: var(--primary-color);
-            color: var(--text-light);
+        /* СЕКЦІЯ ПЕРЕВАГ */
+        .features {
+            padding: 70px 0;
+            background: #0f0d0d;
+            border-bottom: 1px solid #242020;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 30px;
+        }
+        .feature-item {
+            text-align: center;
+            padding: 24px 16px;
+            border: 1px solid #2a2323;
+            border-radius: 6px;
+            background: #171313;
+            transition: 0.25s;
+        }
+        .feature-item:hover {
+            border-color: #d4af6b;
+            transform: translateY(-6px);
+        }
+        .feature-item i {
+            font-size: 38px;
+            color: #d4af6b;
+            margin-bottom: 16px;
+        }
+        .feature-item h3 {
+            font-weight: 400;
+            font-size: 20px;
+            letter-spacing: 1px;
+            color: #f0e2d3;
+        }
+        .feature-item p {
+            font-size: 15px;
+            color: #aa9f93;
+            margin-top: 8px;
         }
 
-        .accordion-header .price-tag {
-            color: var(--accent-color);
-            background: rgba(212, 175, 55, 0.1);
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 16px;
-            transition: var(--transition);
+        /* ГАЛЕРЕЯ / КАТАЛОГ */
+        .gallery {
+            padding: 70px 0;
+            background: #121010;
         }
-
-        .accordion-header.active .price-tag {
-            background: var(--accent-color);
-            color: var(--primary-color);
-        }
-
-        .icon-plus {
-            font-size: 24px;
+        .section-title {
+            font-size: 34px;
             font-weight: 300;
-            transition: transform 0.4s ease;
+            letter-spacing: 2px;
+            color: #f0e2d3;
+            margin-bottom: 12px;
         }
-
-        .accordion-header.active .icon-plus {
-            transform: rotate(45deg);
-        }
-
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s ease-out, padding 0.4s ease;
-            background: #fff;
-            padding: 0 25px;
-            color: #444;
-            font-size: 16px;
-        }
-
-        .accordion-content.show {
-            padding: 20px 25px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .accordion-content ul {
-            list-style-type: none;
-            margin-top: 10px;
-        }
-
-        .accordion-content li {
-            position: relative;
+        .section-sub {
+            color: #a39789;
+            font-size: 18px;
+            margin-bottom: 40px;
+            border-left: 3px solid #d4af6b;
             padding-left: 20px;
-            margin-bottom: 8px;
         }
 
-        .accordion-content li::before {
-            content: '🛡️';
-            position: absolute;
-            left: 0;
-            top: 2px;
-            font-size: 12px;
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 25px;
         }
-        /* -------------------------- */
+        .gallery-card {
+            background: #1d1818;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #2d2626;
+            transition: 0.3s;
+            text-align: center;
+            padding-bottom: 16px;
+        }
+        .gallery-card:hover {
+            border-color: #d4af6b;
+            transform: scale(1.02);
+        }
+        .gallery-card .img-placeholder {
+            height: 230px;
+            background: #2a2121;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #5c4e42;
+            font-size: 14px;
+            letter-spacing: 1px;
+            background-image: repeating-linear-gradient(45deg, #241e1e 0px, #241e1e 10px, #1f1818 10px, #1f1818 20px);
+        }
+        .gallery-card h4 {
+            font-weight: 400;
+            color: #ede3d7;
+            margin: 12px 0 4px;
+            font-size: 19px;
+        }
+        .gallery-card p {
+            color: #b5aa9c;
+            font-size: 14px;
+            padding: 0 10px;
+        }
+        .gallery-card .price-tag {
+            display: inline-block;
+            margin-top: 8px;
+            color: #d4af6b;
+            font-weight: 500;
+            border: 1px solid #3d3230;
+            padding: 4px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
 
-        .tech-box, .legal-box {
-            background-color: #fff;
-            border-left: 6px solid var(--accent-color);
+        /* ПОСЛУГИ */
+        .services {
+            padding: 70px 0;
+            background: #0f0c0c;
+            border-top: 1px solid #221d1d;
+        }
+        .services-flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: space-between;
+        }
+        .service-block {
+            flex: 1 1 220px;
+            background: #1a1616;
+            padding: 30px 22px;
+            border-radius: 6px;
+            border-left: 4px solid #d4af6b;
+        }
+        .service-block h3 {
+            font-size: 22px;
+            font-weight: 300;
+            color: #f0e2d3;
+            margin-bottom: 10px;
+        }
+        .service-block p {
+            color: #b1a498;
+            font-size: 15px;
+        }
+
+        /* КОНТАКТ */
+        .contact {
+            padding: 70px 0;
+            background: #161212;
+            border-top: 1px solid #2c2525;
+        }
+        .contact-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            align-items: flex-start;
+        }
+        .contact-info {
+            flex: 1 1 300px;
+        }
+        .contact-info i {
+            color: #d4af6b;
+            width: 28px;
+            font-size: 20px;
+        }
+        .contact-info p {
+            margin: 14px 0;
+            font-size: 17px;
+        }
+        .contact-info a {
+            color: #d4af6b;
+            text-decoration: none;
+        }
+        .contact-form {
+            flex: 2 1 340px;
+            background: #1d1818;
             padding: 30px;
             border-radius: 8px;
-            margin-bottom: 40px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid #2f2828;
         }
-
-        .tech-box h3, .legal-box h3 {
-            margin-bottom: 20px;
-            font-size: 22px;
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            background: #0f0c0c;
+            border: 1px solid #312a2a;
+            color: #e0dcd9;
+            font-size: 15px;
+            border-radius: 4px;
         }
-
-        .tech-box ul, .legal-box ul {
-            list-style-type: none;
-            margin-top: 15px;
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            outline: 1px solid #d4af6b;
+            border-color: #d4af6b;
         }
-
-        .tech-box li, .legal-box li {
-            margin-bottom: 12px;
-            padding-left: 25px;
-            position: relative;
-        }
-
-        .tech-box li::before, .legal-box li::before {
-            content: '✓';
-            color: var(--accent-color);
-            position: absolute;
-            left: 0;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .telegram-banner {
-            background: linear-gradient(135deg, #229ED9 0%, #1a7bb0 100%);
-            color: white;
-            text-align: center;
-            padding: 50px 20px;
-            border-radius: 12px;
-            margin: 60px 0;
-            box-shadow: 0 10px 20px rgba(34, 158, 217, 0.3);
-        }
-
-        .telegram-banner h3 {
-            font-size: 28px;
-            margin-bottom: 15px;
-        }
-
-        .btn-tg {
-            display: inline-block;
-            background-color: #fff;
-            color: #229ED9;
-            padding: 15px 30px;
-            border-radius: 30px;
-            text-decoration: none;
-            font-weight: 800;
+        .contact-form button {
+            background: #d4af6b;
+            color: #0b0b0b;
+            border: none;
+            padding: 14px 34px;
+            font-weight: 600;
             font-size: 16px;
-            text-transform: uppercase;
-            margin-top: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: var(--transition);
-        }
-
-        .btn-tg:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
-        }
-
-        .contact-section {
-            background-color: var(--primary-color);
-            color: var(--text-light);
-            padding: 70px 0;
-            margin-top: 80px;
-            clip-path: polygon(0 5%, 100% 0, 100% 100%, 0 100%);
-        }
-
-        .contact-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 50px;
-            padding-top: 20px;
-        }
-
-        .contact-info h3, .contact-form h3 {
-            color: var(--accent-color);
-            margin-bottom: 25px;
-            font-size: 26px;
             text-transform: uppercase;
             letter-spacing: 1px;
-        }
-
-        .contact-item {
-            margin-bottom: 20px;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: rgba(255,255,255,0.05);
-            padding: 15px;
-            border-radius: 8px;
-        }
-        
-        .contact-link {
-            color: var(--text-light);
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 20px;
-            transition: var(--transition);
-            display: inline-block;
-            margin-top: 5px;
-        }
-        
-        .contact-link:hover {
-            color: var(--accent-color);
-            transform: scale(1.05);
-        }
-
-        .contact-item strong {
-            color: var(--accent-color);
-            display: block;
-            font-size: 14px;
-            text-transform: uppercase;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 15px;
-            color: #ddd;
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid rgba(255,255,255,0.1);
-            background-color: rgba(255,255,255,0.05);
-            color: white;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: var(--transition);
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: var(--accent-color);
-            background-color: rgba(255,255,255,0.1);
-        }
-
-        .form-group select option {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        /* Динамічна матрьошка у формі */
-        #dynamicField {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s ease, opacity 0.4s ease;
-            opacity: 0;
-        }
-        #dynamicField.show {
-            max-height: 150px;
-            opacity: 1;
-            margin-top: 20px;
-        }
-
-        .btn-submit {
-            background-color: var(--accent-color);
-            color: var(--primary-color);
-            border: none;
-            padding: 18px 20px;
-            font-weight: 800;
-            font-size: 16px;
-            text-transform: uppercase;
             cursor: pointer;
-            border-radius: 8px;
-            width: 100%;
-            transition: var(--transition);
-            margin-top: 10px;
+            transition: 0.25s;
+            border-radius: 2px;
+        }
+        .contact-form button:hover {
+            background: #c09d55;
         }
 
-        .btn-submit:hover {
-            background-color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
-        }
-
+        /* ФУТЕР */
         footer {
-            background-color: #111a22;
-            color: #7f8c8d;
+            background: #0a0808;
+            padding: 30px 0;
+            border-top: 1px solid #1d1818;
             text-align: center;
-            padding: 25px 0;
-            font-size: 15px;
+            color: #665b50;
+            font-size: 14px;
+        }
+        footer span {
+            color: #d4af6b;
         }
 
-        @media (max-width: 768px) {
-            .header-flex, .contact-grid {
+        /* АДАПТИВ */
+        @media (max-width: 900px) {
+            .nav-links {
+                display: none;
                 flex-direction: column;
-                grid-template-columns: 1fr;
-                text-align: center;
+                background: #141212;
+                width: 100%;
+                padding: 20px 0;
+                gap: 18px;
+                border-top: 1px solid #2f2828;
+                margin-top: 18px;
             }
-            nav ul {
-                margin-top: 15px;
+            .nav-links.active {
+                display: flex;
+            }
+            .menu-toggle {
+                display: block;
+            }
+            .header-flex {
                 flex-wrap: wrap;
-                justify-content: center;
             }
-            .hero h1 { font-size: 32px; }
-            .accordion-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .icon-plus { align-self: flex-end; margin-top: -30px; }
+            .header-contact {
+                margin-left: auto;
+            }
+            .hero-content h1 {
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .hero-content h1 {
+                font-size: 28px;
+            }
+            .btn {
+                padding: 10px 24px;
+                font-size: 12px;
+            }
+            .section-title {
+                font-size: 28px;
+            }
         }
     </style>
 </head>
 <body>
 
+    <!-- HEADER -->
     <header>
         <div class="container header-flex">
-            <div class="logo">🛡️ ARES <span>SECURITY</span></div>
-            <nav>
-                <ul>
-                    <li><a href="#home">Головна</a></li>
-                    <li><a href="#prices">Послуги</a></li>
-                    <li><a href="#tech">Обладнання</a></li>
-                    <li><a href="#contacts">Контакти</a></li>
-                </ul>
+            <div class="logo">Vip<span>Escort</span> Paris</div>
+            <div class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </div>
+            <nav class="nav-links" id="navLinks">
+                <a href="#">Про нас</a>
+                <a href="#gallery">Галерея</a>
+                <a href="#services">Послуги</a>
+                <a href="#contact">Контакти</a>
             </nav>
+            <div class="header-contact">
+                <i class="fas fa-phone-alt"></i>
+                <a href="tel:+33123456789">+33 1 23 45 67 89</a>
+            </div>
         </div>
     </header>
 
-    <section id="home" class="hero">
+    <!-- ГЕРОЙ -->
+    <section class="hero">
+        <div class="container hero-grid">
+            <div class="hero-content">
+                <h1>Елітний супровід <br> у <strong>Парижі</strong></h1>
+                <p>Преміальні моделі для будь-яких заходів. Повна конфіденційність, індивідуальний підхід та вишуканий сервіс від агентства з 10-річним досвідом.</p>
+                <div class="btn-group">
+                    <a href="#gallery" class="btn btn-primary">Переглянути галерею</a>
+                    <a href="#contact" class="btn btn-outline">Зв'язатися</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <span style="background: rgba(0,0,0,0.5); padding: 12px 24px; border-radius: 4px; border: 1px solid #d4af6b;">✦ Париж ✦</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ПЕРЕВАГИ -->
+    <section class="features">
         <div class="container">
-            <h1>Безпека — це не розкіш.<br>Це твій <span>спокій</span>.</h1>
-            <p>Надійний захист вашого бізнесу, майна та близьких у Миронівці та районі. Ми працюємо на випередження, щоб ви могли спати спокійно.</p>
-        </div>
-    </section>
-
-    <main class="container">
-        
-        <section id="prices">
-            <h2 class="section-title">Наші послуги (Натисніть для деталей)</h2>
-            
-            <div class="accordion">
-                
-                <div class="accordion-item">
-                    <button class="accordion-header">
-                        🏡 Охорона приватних будинків, дач та котеджів 
-                        <span class="price-tag">від 4 500 грн / міс</span>
-                        <span class="icon-plus">+</span>
-                    </button>
-                    <div class="accordion-content">
-                        <p><strong>Що саме входить у послугу:</strong></p>
-                        <ul>
-                            <li>Регулярний патруль периметру та прибудинкової території.</li>
-                            <li>Фізична перевірка цілісності вікон, дверей та замків під час вашої відсутності.</li>
-                            <li>Миттєве реагування на спрацювання сигналізації або підозрілу активність.</li>
-                            <li>Запобігання крадіжкам, вандалізму та незаконному проникненню.</li>
-                            <li>Візуальний контроль за відсутністю пожежі чи затоплення.</li>
-                        </ul>
-                    </div>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <i class="fas fa-crown"></i>
+                    <h3>ВІП-відбір</h3>
+                    <p>Моделі проходять суворий кастинг, володіють мінімум двома мовами та мають бездоганні манери.</p>
                 </div>
-
-                <div class="accordion-item">
-                    <button class="accordion-header">
-                        🏢 Нагляд за квартирами (відпустка / відрядження)
-                        <span class="price-tag">від 3 000 грн / міс</span>
-                        <span class="icon-plus">+</span>
-                    </button>
-                    <div class="accordion-content">
-                        <p><strong>Що саме входить у послугу:</strong></p>
-                        <ul>
-                            <li>Контроль доступу та регулярний огляд вхідних дверей/замків.</li>
-                            <li>Виїмка пошти зі скриньки (щоб не привертати увагу злодіїв переповненою скринькою).</li>
-                            <li>Оперативне прибуття на об'єкт у разі скарг сусідів чи спрацювання датчиків.</li>
-                            <li>Огляд на предмет витоку води або газу за потреби.</li>
-                        </ul>
-                    </div>
+                <div class="feature-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Конфіденційність</h3>
+                    <p>Повна анонімність та безпека для клієнтів. Ваші дані ніколи не будуть розголошені.</p>
                 </div>
-
-                <div class="accordion-item">
-                    <button class="accordion-header">
-                        💼 Охорона бізнесу (Магазини, МАФи, Кав'ярні)
-                        <span class="price-tag">від 8 000 грн / міс</span>
-                        <span class="icon-plus">+</span>
-                    </button>
-                    <div class="accordion-content">
-                        <p><strong>Що саме входить у послугу:</strong></p>
-                        <ul>
-                            <li>Постійна фізична присутність охоронця на об'єкті у робочий (або нічний) час.</li>
-                            <li>Вирішення конфліктних ситуацій з агресивними відвідувачами.</li>
-                            <li>Захист товару та каси від крадіжок і мародерства.</li>
-                            <li>Контроль відкриття та закриття торгової точки.</li>
-                            <li>Миттєве реагування на тривожну кнопку (КТС).</li>
-                        </ul>
-                    </div>
+                <div class="feature-item">
+                    <i class="fas fa-concierge-bell"></i>
+                    <h3>Консьєрж-сервіс</h3>
+                    <p>Бронювання готелів, ресторанів, трансферів – ми подбаємо про кожну деталь вашого вечора.</p>
                 </div>
-
-                <div class="accordion-item">
-                    <button class="accordion-header">
-                        🚜 Промислова охорона (Склади, Бази, Агросектор)
-                        <span class="price-tag">від 12 000 грн / міс</span>
-                        <span class="icon-plus">+</span>
-                    </button>
-                    <div class="accordion-content">
-                        <p><strong>Що саме входить у послугу:</strong></p>
-                        <ul>
-                            <li>Облаштування контрольно-пропускного пункту (КПП) зі шлагбаумом.</li>
-                            <li>Перевірка документів, огляд транспорту та ведення журналів обліку вантажів.</li>
-                            <li>Цілодобове патрулювання великих відкритих територій (24/7).</li>
-                            <li>Захист сільгосптехніки, паливно-мастильних матеріалів та врожаю від розкрадання.</li>
-                            <li>Контроль за дотриманням внутрішнього розпорядку персоналом.</li>
-                        </ul>
-                    </div>
+                <div class="feature-item">
+                    <i class="fas fa-globe-europe"></i>
+                    <h3>Міжнародний супровід</h3>
+                    <p>Супровід на заходи, бізнес-зустрічі та подорожі по всьому світу з персональним менеджером.</p>
                 </div>
-
-                <div class="accordion-item">
-                    <button class="accordion-header">
-                        🛡️ Супровід цінних вантажів / Особиста охорона
-                        <span class="price-tag">Індивідуально</span>
-                        <span class="icon-plus">+</span>
-                    </button>
-                    <div class="accordion-content">
-                        <p><strong>Що саме входить у послугу:</strong></p>
-                        <ul>
-                            <li>Фізичний супровід та захист матеріальних цінностей під час транспортування.</li>
-                            <li>Особиста безпека клієнта під час ділових зустрічей чи масових заходів.</li>
-                            <li>Розробка безпечного маршруту пересування.</li>
-                            <li>Повна конфіденційність та готовність діяти в екстремальних умовах.</li>
-                        </ul>
-                    </div>
-                </div>
-
-            </div>
-
-        </section>
-
-        <section id="tech" class="tech-box">
-            <h3>📹 Технічна безпека (Камери та Сигналізація)</h3>
-            <p>Бажаєте посилити захист свого об'єкта сучасними технологіями? Ми допоможемо спроєктувати та встановити надійну систему безпеки:</p>
-            <ul>
-                <li><strong>Відеоспостереження (IP-камери):</strong> Переглядайте камери в режимі реального часу зі свого смартфона з будь-якої точки світу. Збереження записів в архів.</li>
-                <li><strong>Охоронна сигналізація:</strong> Датчики руху, відкриття дверей, розбиття скла. Миттєве push-сповіщення вам на телефон.</li>
-                <li><strong>Датчики безпеки:</strong> Захист від пожежі (датчики диму) та затоплення (перекриття води).</li>
-            </ul>
-            <p style="margin-top: 15px; color: #e74c3c; font-weight: bold; font-size: 14px;">⚠️ Примітка: Обладнання та монтажні роботи підбираються під ваш бюджет і оплачуються окремо за кошти клієнта.</p>
-        </section>
-
-        <section class="legal-box">
-            <h3>📄 Юридична гарантія (Працюємо офіційно)</h3>
-            <p>Ми цінуємо довіру, тому готові закріпити нашу співпрацю офіційним <strong>Договором надання охоронних послуг</strong>.</p>
-            <ul>
-                <li><strong>Чіткий регламент:</strong> Усі завдання, пости та графіки охорони прописані на папері.</li>
-                <li><strong>Матеріальна відповідальність:</strong> Ми несемо юридичну відповідальність за довірене нам майно.</li>
-                <li><strong>Повна конфіденційність:</strong> Комерційні таємниці та ваше особисте життя захищені договором про нерозголошення інформації (NDA).</li>
-            </ul>
-        </section>
-
-        <section class="telegram-banner">
-            <h3>📢 Наш Telegram: Канал та Чат</h3>
-            <p>Підписуйтесь на канал, щоб читати новини безпеки Миронівки, та приєднуйтесь до чату для обговорень і швидкого зв'язку!</p>
-            
-            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 25px;">
-                <a href="https://t.me/arest_sec" target="_blank" class="btn-tg" style="margin-top: 0;">📰 Перейти в Канал</a>
-                <a href="https://t.me/+Rh-oSdEnpbswYWQ6" target="_blank" class="btn-tg" style="margin-top: 0;">💬 Приєднатися до Чату</a>
-            </div>
-        </section>
-
-    </main>
-
-    <section id="contacts" class="contact-section">
-        <div class="container contact-grid">
-            <div class="contact-info">
-                <h3>Контакти для зв'язку</h3>
-                <p style="margin-bottom: 30px; font-size: 18px;">Ми завжди на зв'язку та готові відповісти на будь-які ваші запитання. <b>Натисніть на картку нижче для швидкого зв'язку.</b></p>
-                
-                <!-- Клікабельна картка ТЕЛЕФОНУ -->
-                <a href="tel:+380738822980" style="text-decoration: none; display: block; margin-bottom: 20px;">
-                    <div class="contact-item" style="margin-bottom: 0; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                        <span style="font-size: 24px; margin-right: 15px;">📱</span>
-                        <div>
-                            <strong>Телефон:</strong>
-                            <span style="color: white; font-size: 18px; font-weight: bold;">+380 73 882 29 80</span>
-                        </div>
-                    </div>
-                </a>
-
-                <!-- Клікабельна картка TELEGRAM ЧАТУ -->
-                <a href="https://t.me/+Rh-oSdEnpbswYWQ6" target="_blank" style="text-decoration: none; display: block; margin-bottom: 20px;">
-                    <div class="contact-item" style="margin-bottom: 0; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                        <span style="font-size: 24px; margin-right: 15px;">💬</span>
-                        <div>
-                            <strong>Telegram Чат:</strong>
-                            <span style="color: var(--accent-color); font-size: 18px; font-weight: bold; text-decoration: underline;">Написати нам у Telegram</span>
-                        </div>
-                    </div>
-                </a>
-
-                <!-- Картка ЛОКАЦІЇ -->
-                <div class="contact-item" style="margin-bottom: 20px;">
-                    <span style="font-size: 24px; margin-right: 15px;">📍</span>
-                    <div>
-                        <strong>Локація:</strong>
-                        <span style="color: white; font-size: 18px;">м. Миронівка та Київська область</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="contact-form">
-                <h3>Залишити заявку</h3>
-                <form id="orderForm">
-                    <div class="form-group">
-                        <label for="name">Ваше ім'я</label>
-                        <input type="text" id="name" required placeholder="Як до вас звертатися?">
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Номер телефону</label>
-                        <input type="tel" id="phone" required placeholder="+380...">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="objectSelect">Оберіть послугу, яка вас цікавить:</label>
-                        <select id="objectSelect" onchange="toggleMatryoshka()" required>
-                            <option value="none" disabled selected>Натисніть, щоб обрати...</option>
-                            <option value="house">🏡 Охорона приватного будинку / дачі</option>
-                            <option value="apartment">🏢 Нагляд за квартирою</option>
-                            <option value="commercial">💼 Охорона бізнесу (Магазин / Кав'ярня)</option>
-                            <option value="warehouse">🚜 Промислова охорона (Склад / База / Агро)</option>
-                            <option value="escort">🛡️ Супровід вантажів / Особиста охорона</option>
-                            <option value="cameras">📹 Встановлення камер / Сигналізації</option>
-                            <option value="consult">❓ Потрібна просто консультація</option>
-                        </select>
-                    </div>
-
-                    <!-- Динамічне поле (Матрьошка форми) -->
-                    <div class="form-group" id="dynamicField">
-                        <label for="extraInfo">Опишіть коротко об'єкт (Скільки камер потрібно? Яка площа?)</label>
-                        <input type="text" id="extraInfo" placeholder="Наприклад: 3 камери на вулицю, 1 в приміщення">
-                    </div>
-
-                    <button type="submit" class="btn-submit" id="submitBtn">Надіслати заявку</button>
-                </form>
             </div>
         </div>
     </section>
 
+    <!-- ГАЛЕРЕЯ (КАТАЛОГ) -->
+    <section class="gallery" id="gallery">
+        <div class="container">
+            <h2 class="section-title">Наші моделі</h2>
+            <div class="section-sub">Обирайте найкращих супутниць для незабутніх зустрічей у Парижі</div>
+            <div class="gallery-grid">
+                <!-- Картка 1 -->
+                <div class="gallery-card">
+                    <div class="img-placeholder">📸 Елітна модель</div>
+                    <h4>Софі</h4>
+                    <p>24 роки / 168 см / GFE, PSE</p>
+                    <span class="price-tag">від 500 €</span>
+                </div>
+                <!-- Картка 2 -->
+                <div class="gallery-card">
+                    <div class="img-placeholder">📸 Елітна модель</div>
+                    <h4>Катрін</h4>
+                    <p>27 років / 172 см / інкалл, ауткалл</p>
+                    <span class="price-tag">від 650 €</span>
+                </div>
+                <!-- Картка 3 -->
+                <div class="gallery-card">
+                    <div class="img-placeholder">📸 Елітна модель</div>
+                    <h4>Емма</h4>
+                    <p>22 роки / 165 см / GFE, масаж</p>
+                    <span class="price-tag">від 450 €</span>
+                </div>
+                <!-- Картка 4 -->
+                <div class="gallery-card">
+                    <div class="img-placeholder">📸 Елітна модель</div>
+                    <h4>Жюлі</h4>
+                    <p>26 років / 170 см / PSE, подорожі</p>
+                    <span class="price-tag">від 580 €</span>
+                </div>
+                <!-- Картка 5 -->
+                <div class="gallery-card">
+                    <div class="img-placeholder">📸 Елітна модель</div>
+                    <h4>Лора</h4>
+                    <p>23 роки / 163 см / GFE, івенти</p>
+                    <span class="price-tag">від 520 €</span>
+                </div>
+                <!-- Картка 6 -->
+                <div class="gallery-card">
+                    <div class="img-placeholder">📸 Елітна модель</div>
+                    <h4>Ізабель</h4>
+                    <p>29 років / 175 см / бізнес-супровід</p>
+                    <span class="price-tag">від 700 €</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ПОСЛУГИ -->
+    <section class="services" id="services">
+        <div class="container">
+            <h2 class="section-title">Наші послуги</h2>
+            <div class="section-sub">Обирайте ідеальний формат для ваших вражень</div>
+            <div class="services-flex">
+                <div class="service-block">
+                    <h3>GFE & PSE</h3>
+                    <p>Послуги "дівчина для поцілунків" або "порно-стиль" – на ваш вибір. Насолоджуйтесь справжньою близькістю.</p>
+                </div>
+                <div class="service-block">
+                    <h3>Інкалл / Ауткалл</h3>
+                    <p>Зустріч у нашому затишному апартаменті або у вашому готелі / помешканні. Максимальний комфорт.</p>
+                </div>
+                <div class="service-block">
+                    <h3>Масаж від майстра</h3>
+                    <p>Розслаблюючий або еротичний масаж від професійної масажистки з досвідом роботи в спа-салонах.</p>
+                </div>
+                <div class="service-block">
+                    <h3>Консьєрж + бронювання</h3>
+                    <p>Ми підберемо найкращий ресторан, готель або організуємо трансфер, щоб ваш вечір був бездоганним.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- КОНТАКТИ -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <h2 class="section-title">Зв'яжіться з нами</h2>
+            <div class="section-sub">Менеджер відповість на будь-які запитання протягом 15 хвилин</div>
+            <div class="contact-wrap">
+                <div class="contact-info">
+                    <p><i class="fas fa-map-pin"></i> Париж, Франція (VIII округ)</p>
+                    <p><i class="fas fa-phone-alt"></i> <a href="tel:+33123456789">+33 1 23 45 67 89</a></p>
+                    <p><i class="fab fa-whatsapp"></i> <a href="#">+33 6 12 34 56 78</a></p>
+                    <p><i class="fas fa-envelope"></i> <a href="mailto:info@vipescortparis.com">info@vipescortparis.com</a></p>
+                    <p style="margin-top: 24px; font-style: italic; color: #a39789;">Працюємо цілодобово, 7 днів на тиждень.</p>
+                </div>
+                <div class="contact-form">
+                    <form>
+                        <input type="text" placeholder="Ваше ім'я" required>
+                        <input type="email" placeholder="Email" required>
+                        <input type="text" placeholder="Телефон (необов'язково)">
+                        <textarea rows="4" placeholder="Бажані дата, послуга або модель..."></textarea>
+                        <button type="submit">Надіслати запит</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ФУТЕР -->
     <footer>
         <div class="container">
-            &copy; 2026 ARES Security. Твій спокій — наша робота.
+            <p>© 2026 <span>VIP Escort Paris</span> — преміальний супровід у столиці Франції. Всі права захищено.</p>
+            <p style="margin-top: 8px; font-size: 13px; opacity: 0.7;">Ваша конфіденційність — наш пріоритет.</p>
         </div>
     </footer>
 
+    <!-- Бургер-меню (маленький скрипт) -->
     <script>
-        // --- Скрипт для Акордеону (Матрьошки послуг) ---
-        const accordions = document.querySelectorAll('.accordion-header');
-        
-        accordions.forEach(acc => {
-            acc.addEventListener('click', function() {
-                accordions.forEach(otherAcc => {
-                    if (otherAcc !== this && otherAcc.classList.contains('active')) {
-                        otherAcc.classList.remove('active');
-                        otherAcc.nextElementSibling.style.maxHeight = null;
-                        otherAcc.nextElementSibling.classList.remove('show');
-                    }
-                });
-
-                this.classList.toggle('active');
-                const content = this.nextElementSibling;
-                
-                if (this.classList.contains('active')) {
-                    content.classList.add('show');
-                    content.style.maxHeight = content.scrollHeight + 50 + "px"; // + запас на відступи
-                } else {
-                    content.classList.remove('show');
-                    content.style.maxHeight = null;
-                }
-            });
-        });
-
-        // --- Скрипт для динамічної форми (Матрьошка форми) ---
-        function toggleMatryoshka() {
-            const select = document.getElementById('objectSelect');
-            const dynamicField = document.getElementById('dynamicField');
-            
-            if (select.value === 'cameras') {
-                dynamicField.classList.add('show');
-                dynamicField.style.maxHeight = "150px";
-            } else {
-                dynamicField.classList.remove('show');
-                dynamicField.style.maxHeight = null;
-            }
-        }
-
-        // --- СКРИПТ ВІДПРАВКИ В TELEGRAM БОТА ---
-        document.getElementById('orderForm').addEventListener('submit', function(e) {
-            e.preventDefault(); 
-            
-            const btn = document.getElementById('submitBtn');
-            btn.innerText = 'Відправлення...';
-            btn.style.opacity = '0.7';
-
-            // Збираємо дані
-            const name = document.getElementById('name').value;
-            const phone = document.getElementById('phone').value;
-            const serviceSelect = document.getElementById('objectSelect');
-            const service = serviceSelect.options[serviceSelect.selectedIndex].text;
-            const extra = document.getElementById('extraInfo').value;
-
-            // ДАНІ БОТА
-            const botToken = '8913538423:AAFSB0cckRKokPJdRwJ1sUpulEhdgwNCrRg'; 
-            const chatId = '8609439707'; 
-
-            // Формуємо текст повідомлення для Телеграму
-            let message = `🚨 <b>НОВА ЗАЯВКА - ARES Security</b>\n\n`;
-            message += `👤 <b>Ім'я:</b> ${name}\n`;
-            message += `📞 <b>Телефон:</b> ${phone}\n`;
-            message += `🛠 <b>Обрана послуга:</b> ${service}\n`;
-            if (document.getElementById('objectSelect').value === 'cameras' && extra !== "") {
-                message += `📝 <b>Деталі від клієнта:</b> ${extra}\n`;
-            }
-
-            // Відправка через Telegram API
-            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    text: message,
-                    parse_mode: 'HTML'
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if(data.ok) {
-                    alert('✅ Заявку успішно відправлено! Ми зв\'яжемося з вами найближчим часом.');
-                    document.getElementById('orderForm').reset();
-                    document.getElementById('dynamicField').classList.remove('show');
-                    document.getElementById('dynamicField').style.maxHeight = null;
-                } else {
-                    alert('❌ Сталася помилка. Перевірте налаштування бота.');
-                    console.error(data);
-                }
-            })
-            .catch(error => {
-                alert('❌ Помилка підключення. Перевірте інтернет.');
-                console.error('Error:', error);
-            })
-            .finally(() => {
-                btn.innerText = 'Надіслати заявку';
-                btn.style.opacity = '1';
-            });
+        const toggle = document.getElementById('menuToggle');
+        const nav = document.getElementById('navLinks');
+        toggle.addEventListener('click', () => {
+            nav.classList.toggle('active');
         });
     </script>
 </body>
