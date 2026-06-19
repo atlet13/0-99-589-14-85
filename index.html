@@ -12,30 +12,31 @@
             --text-light: #ffffff;
             --bg-light: #f8f9fa;
             --border-color: #e2e8f0;
+            --transition: all 0.3s ease;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: var(--text-dark);
-            background-color: #ffffff;
+            background-color: var(--bg-light);
         }
 
         header {
             background-color: var(--primary-color);
             color: var(--text-light);
-            padding: 20px 0;
+            padding: 15px 0;
             position: sticky;
             top: 0;
             z-index: 1000;
             border-bottom: 3px solid var(--accent-color);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
         .container {
@@ -51,8 +52,8 @@
         }
 
         .logo {
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 26px;
+            font-weight: 800;
             letter-spacing: 1px;
             display: flex;
             align-items: center;
@@ -66,15 +67,17 @@
         nav ul {
             display: flex;
             list-style: none;
-            gap: 20px;
+            gap: 25px;
         }
 
         nav a {
             color: var(--text-light);
             text-decoration: none;
             font-weight: 500;
-            transition: color 0.3s;
+            transition: var(--transition);
             font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         nav a:hover {
@@ -82,17 +85,19 @@
         }
 
         .hero {
-            background: linear-gradient(rgba(26, 37, 47, 0.85), rgba(26, 37, 47, 0.95)), url('https://images.unsplash.com/photo-1557597774-9d273605dfa9?auto=format&fit=crop&w=1200&q=80') no-repeat center center/cover;
+            background: linear-gradient(rgba(26, 37, 47, 0.8), rgba(26, 37, 47, 0.95)), url('https://images.unsplash.com/photo-1557597774-9d273605dfa9?auto=format&fit=crop&w=1200&q=80') no-repeat center center/cover;
             color: var(--text-light);
-            padding: 100px 0;
+            padding: 120px 0;
             text-align: center;
+            clip-path: polygon(0 0, 100% 0, 100% 95%, 0 100%);
         }
 
         .hero h1 {
-            font-size: 42px;
+            font-size: 48px;
             margin-bottom: 20px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
 
         .hero h1 span {
@@ -100,19 +105,20 @@
         }
 
         .hero p {
-            font-size: 18px;
-            max-width: 700px;
+            font-size: 20px;
+            max-width: 750px;
             margin: 0 auto 30px auto;
             opacity: 0.9;
         }
 
         .section-title {
             text-align: center;
-            font-size: 28px;
-            margin: 50px 0 30px 0;
+            font-size: 32px;
+            margin: 60px 0 40px 0;
             position: relative;
-            padding-bottom: 10px;
+            padding-bottom: 15px;
             text-transform: uppercase;
+            color: var(--primary-color);
         }
 
         .section-title::after {
@@ -121,127 +127,277 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
+            width: 80px;
+            height: 4px;
             background-color: var(--accent-color);
+            border-radius: 2px;
         }
 
-        .price-table-container {
-            overflow-x: auto;
-            background: var(--bg-light);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 40px;
+        /* --- МАТРЬОШКИ (АКОРДЕОН) --- */
+        .accordion {
+            margin-bottom: 50px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
+        .accordion-item {
             background: #fff;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
         }
 
-        th, td {
-            padding: 15px;
+        .accordion-item:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .accordion-header {
+            width: 100%;
             text-align: left;
-            border-bottom: 1px solid var(--border-color);
+            padding: 20px 25px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-color);
+            transition: var(--transition);
         }
 
-        th {
+        .accordion-header.active {
             background-color: var(--primary-color);
             color: var(--text-light);
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 14px;
         }
 
-        tr:hover {
-            background-color: #fcfcfc;
-        }
-
-        .price-tag {
-            color: #e74c3c;
-            font-weight: bold;
+        .accordion-header .price-tag {
+            color: var(--accent-color);
+            background: rgba(212, 175, 55, 0.1);
+            padding: 5px 15px;
+            border-radius: 20px;
             font-size: 16px;
-            white-space: nowrap;
+            transition: var(--transition);
         }
 
-        .tech-box, .legal-box {
-            background-color: var(--bg-light);
-            border-left: 5px solid var(--accent-color);
-            padding: 25px;
-            border-radius: 0 8px 8px 0;
-            margin-bottom: 40px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .tech-box h3, .legal-box h3 {
-            margin-bottom: 15px;
-            font-size: 20px;
+        .accordion-header.active .price-tag {
+            background: var(--accent-color);
             color: var(--primary-color);
         }
 
+        .icon-plus {
+            font-size: 24px;
+            font-weight: 300;
+            transition: transform 0.4s ease;
+        }
+
+        .accordion-header.active .icon-plus {
+            transform: rotate(45deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, padding 0.4s ease;
+            background: #fff;
+            padding: 0 25px;
+            color: #555;
+            font-size: 16px;
+        }
+
+        .accordion-content.show {
+            padding: 20px 25px;
+            border-top: 1px solid var(--border-color);
+        }
+        /* -------------------------- */
+
+        .tech-box, .legal-box {
+            background-color: #fff;
+            border-left: 6px solid var(--accent-color);
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .tech-box h3, .legal-box h3 {
+            margin-bottom: 20px;
+            font-size: 22px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .tech-box ul, .legal-box ul {
-            list-style-position: inside;
-            margin-top: 10px;
+            list-style-type: none;
+            margin-top: 15px;
         }
 
         .tech-box li, .legal-box li {
-            margin-bottom: 8px;
+            margin-bottom: 12px;
+            padding-left: 25px;
+            position: relative;
         }
 
-        .warning-text {
-            display: inline-block;
-            margin-top: 15px;
-            font-weight: 600;
-            color: #7f8c8d;
-            font-size: 14px;
+        .tech-box li::before, .legal-box li::before {
+            content: '✓';
+            color: var(--accent-color);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            font-size: 18px;
         }
 
         .telegram-banner {
-            background-color: #229ED9;
+            background: linear-gradient(135deg, #229ED9 0%, #1a7bb0 100%);
             color: white;
             text-align: center;
-            padding: 40px 20px;
-            border-radius: 8px;
-            margin: 40px 0;
+            padding: 50px 20px;
+            border-radius: 12px;
+            margin: 60px 0;
+            box-shadow: 0 10px 20px rgba(34, 158, 217, 0.3);
         }
 
         .telegram-banner h3 {
-            font-size: 24px;
-            margin-bottom: 10px;
+            font-size: 28px;
+            margin-bottom: 15px;
         }
 
         .btn-tg {
             display: inline-block;
             background-color: #fff;
             color: #229ED9;
-            padding: 12px 30px;
-            border-radius: 25px;
+            padding: 15px 40px;
+            border-radius: 30px;
             text-decoration: none;
-            font-weight: bold;
-            margin-top: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 800;
+            font-size: 16px;
+            text-transform: uppercase;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: var(--transition);
         }
 
         .btn-tg:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
         }
 
         .contact-section {
             background-color: var(--primary-color);
             color: var(--text-light);
-            padding: 50px 0;
-            margin-top: 60px;
+            padding: 70px 0;
+            margin-top: 80px;
+            clip-path: polygon(0 5%, 100% 0, 100% 100%, 0 100%);
         }
 
         .contact-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 40px;
+            gap: 50px;
+            padding-top: 20px;
+        }
+
+        .contact-info h3, .contact-form h3 {
+            color: var(--accent-color);
+            margin-bottom: 25px;
+            font-size: 26px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .contact-item {
+            margin-bottom: 20px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .contact-item strong {
+            color: var(--accent-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 15px;
+            color: #ddd;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(255,255,255,0.1);
+            background-color: rgba(255,255,255,0.05);
+            color: white;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .form-group select option {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Динамічна матрьошка у формі */
+        #dynamicField {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.4s ease;
+            opacity: 0;
+        }
+        #dynamicField.show {
+            max-height: 100px;
+            opacity: 1;
+            margin-top: 20px;
+        }
+
+        .btn-submit {
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+            border: none;
+            padding: 18px 20px;
+            font-weight: 800;
+            font-size: 16px;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 8px;
+            width: 100%;
+            transition: var(--transition);
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            background-color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        footer {
+            background-color: #111a22;
+            color: #7f8c8d;
+            text-align: center;
+            padding: 25px 0;
+            font-size: 15px;
         }
 
         @media (max-width: 768px) {
@@ -254,89 +410,10 @@
                 margin-top: 15px;
                 flex-wrap: wrap;
                 justify-content: center;
-                gap: 15px;
             }
-            .hero h1 {
-                font-size: 32px;
-            }
-        }
-
-        .contact-info h3 {
-            color: var(--accent-color);
-            margin-bottom: 20px;
-            font-size: 22px;
-            text-transform: uppercase;
-        }
-
-        .contact-item {
-            margin-bottom: 15px;
-            font-size: 16px;
-        }
-
-        .contact-item strong {
-            color: var(--accent-color);
-        }
-
-        .contact-form h3 {
-            margin-bottom: 20px;
-            font-size: 22px;
-            text-transform: uppercase;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background-color: rgba(255,255,255,0.05);
-            color: white;
-            border-radius: 4px;
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: var(--accent-color);
-        }
-
-        .form-group select option {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .btn-submit {
-            background-color: var(--accent-color);
-            color: var(--primary-color);
-            border: none;
-            padding: 12px 20px;
-            font-weight: bold;
-            text-transform: uppercase;
-            cursor: pointer;
-            border-radius: 4px;
-            width: 100%;
-            transition: background 0.3s;
-        }
-
-        .btn-submit:hover {
-            background-color: #fff;
-            color: var(--primary-color);
-        }
-
-        footer {
-            background-color: #111a22;
-            color: #7f8c8d;
-            text-align: center;
-            padding: 20px 0;
-            font-size: 14px;
-            border-top: 1px solid rgba(255,255,255,0.05);
+            .hero h1 { font-size: 32px; }
+            .accordion-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .icon-plus { align-self: flex-end; margin-top: -30px; }
         }
     </style>
 </head>
@@ -348,9 +425,8 @@
             <nav>
                 <ul>
                     <li><a href="#home">Головна</a></li>
-                    <li><a href="#prices">Послуги та Прайс</a></li>
-                    <li><a href="#tech">Технічна безпека</a></li>
-                    <li><a href="#telegram">Наш Telegram</a></li>
+                    <li><a href="#prices">Прайс</a></li>
+                    <li><a href="#tech">Обладнання</a></li>
                     <li><a href="#contacts">Контакти</a></li>
                 </ul>
             </nav>
@@ -359,75 +435,91 @@
 
     <section id="home" class="hero">
         <div class="container">
-            <h1>Безпека — це не розкіш. <br>Це твій <span>спокій</span>.</h1>
-            <p>Коли ти йдеш на роботу, їдеш у відпустку чи зачиняєш свій магазин на ніч — чи впевнений ти, що все під контролем? Камери лише знімають відео, а ARES Security — захищає тут і зараз.</p>
-            <p>Ми забезпечуємо надійну фізичну охорону для приватних осіб та бізнесу в Миронівці та районі.</p>
+            <h1>Безпека — це не розкіш.<br>Це твій <span>спокій</span>.</h1>
+            <p>Коли ти йдеш на роботу, їдеш у відпустку чи зачиняєш свій магазин на ніч — чи впевнений ти, що все під контролем? ARES Security — захищає тут і зараз.</p>
         </div>
     </section>
 
     <main class="container">
         
         <section id="prices">
-            <h2 class="section-title">Послуги та Прайс</h2>
-            <div class="price-table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Об'єкт охорони</th>
-                            <th>Що входить у вартість</th>
-                            <th>Ціна за місяць</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>🏡 Приватні будинки / Дачі</strong></td>
-                            <td>Регулярний обхід території, контроль периметру, миттєве реагування на позаштатні ситуації.</td>
-                            <td class="price-tag">від 4 500 грн</td>
-                        </tr>
-                        <tr>
-                            <td><strong>🏢 Квартири</strong></td>
-                            <td>Охорона під час вашої відсутності (відпустка, відрядження), контроль доступу.</td>
-                            <td class="price-tag">від 3 000 грн</td>
-                        </tr>
-                        <tr>
-                            <td><strong>💼 Магазини, Кав'ярні, МАФі</strong></td>
-                            <td>Физична присутність на об'єкті, вирішення конфліктних ситуацій, захист від крадіжок та хуліганства.</td>
-                            <td class="price-tag">від 8 000 грн</td>
-                        </tr>
-                        <tr>
-                            <td><strong>🚜 Склади, Бази, Агросектор</strong></td>
-                            <td>Організація контрольно-пропускного пункту (КПП), охорона техніки та матеріальних цінностей, патрулювання 24/7.</td>
-                            <td class="price-tag">від 12 000 грн</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <h2 class="section-title">Наші послуги (Натисніть для деталей)</h2>
+            
+            <!-- АКОРДЕОН / МАТРЬОШКА -->
+            <div class="accordion">
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        🏡 Приватні будинки / Дачі 
+                        <span class="price-tag">від 4 500 грн / міс</span>
+                        <span class="icon-plus">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p><strong>Що входить:</strong> Регулярний обхід території, контроль периметру, миттєве реагування на позаштатні ситуації, перевірка замків та вікон під час вашої відсутності.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        🏢 Квартири
+                        <span class="price-tag">від 3 000 грн / міс</span>
+                        <span class="icon-plus">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p><strong>Що входить:</strong> Охорона під час вашої тривалої відсутності (відпустка, відрядження), контроль доступу, регулярний огляд дверей та вікон.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        💼 Магазини, Кав'ярні, МАФі
+                        <span class="price-tag">від 8 000 грн / міс</span>
+                        <span class="icon-plus">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p><strong>Що входить:</strong> Фізична присутність на об'єкті, вирішення конфліктних ситуацій з відвідувачами, захист від крадіжок, мародерства та хуліганства.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        🚜 Склади, Бази, Агросектор
+                        <span class="price-tag">від 12 000 грн / міс</span>
+                        <span class="icon-plus">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p><strong>Що входить:</strong> Організація контрольно-пропускного пункту (КПП), ведення журналу обліку, охорона техніки, патрулювання великих територій 24/7.</p>
+                    </div>
+                </div>
+
             </div>
-            <p style="font-size: 14px; color: #7f8c8d; margin-top: -30px; margin-bottom: 40px;">* Остаточна вартість залежить від площі об'єкта, кількості постів та графіку роботи (нічні зміни, подобово чи 24/7).</p>
+            <!-- КІНЕЦЬ АКОРДЕОНУ -->
+
         </section>
 
         <section id="tech" class="tech-box">
-            <h3>📹 Додаткові послуги: Технічна безпека</h3>
-            <p>Бажаєте посилити захист свого об'єкта сучасними технологіями? Ми допоможемо вам налаштувати повний контроль. За бажанням клієнта ми здійснюємо підбір та професійне встановлення:</p>
+            <h3>📹 Технічна безпека (Камери та Сигналізація)</h3>
+            <p>Бажаєте посилити захист свого об'єкта сучасними технологіями? За бажанням клієнта ми здійснюємо підбір та професійне встановлення:</p>
             <ul>
-                <li><strong>Камер відеоспостереження</strong> (з можливості онлайн-перегляду з вашого телефона з будь-якої точки світу).</li>
-                <li><strong>Систем сигналізації та датчиків руху</strong> (для миттєвого виявлення проникнення).</li>
+                <li><strong>Камер відеоспостереження</strong> (перегляд онлайн з телефона з будь-якої точки світу).</li>
+                <li><strong>Систем сигналізації та датчиків руху</strong> (миттєве сповіщення про проникнення).</li>
             </ul>
-            <span class="warning-text">⚠️ Зверніть увагу: Обладнання та монтажні роботи здійснюються та оплачуються окремо за кошти клієнта (підбираємо варіанти під будь-який бюджет).</span>
+            <p style="margin-top: 15px; color: #e74c3c; font-weight: bold; font-size: 14px;">⚠️ Обладнання та монтаж оплачуються окремо за кошти клієнта.</p>
         </section>
 
         <section class="legal-box">
-            <h3>📄 Юридична гарантія: Працюємо офіційно</h3>
-            <p>За вашим бажанням ми укладаємо <strong>офіційний Договір або Контракт</strong> на надання охоронних послуг. Що це дає вам?</p>
+            <h3>📄 Юридична гарантія (Працюємо офіційно)</h3>
+            <p>За вашим бажанням ми укладаємо <strong>офіційний Договір</strong> на надання послуг.</p>
             <ul>
                 <li><strong>Чіткі обов'язки:</strong> Усі завдання охорони прописані на папері.</li>
                 <li><strong>Матеріальна відповідальність:</strong> Ми відповідаємо за ваше майно юридично.</li>
-                <li><strong>Конфіденційність:</strong> Пункт про нерозголошення інформації захищає ваш бізнес та особисте життя.</li>
+                <li><strong>Конфіденційність:</strong> Ваші таємниці захищені договором про нерозголошення.</li>
             </ul>
         </section>
 
-        <section id="telegram" class="telegram-banner">
+        <section class="telegram-banner">
             <h3>📢 Наш Telegram-канал</h3>
-            <p>Приєднуйтесь до нашої спільноти! У каналі ми ділимося новинами безпеки Миронівки, звітами про роботу та корисними порадами.</p>
+            <p>Новини безпеки Миронівки, звіти про роботу та корисні поради для захисту майна.</p>
             <a href="https://t.me/ARES_Security_Myronivka" target="_blank" class="btn-tg">Приєднатися до каналу</a>
         </section>
 
@@ -437,33 +529,47 @@
         <div class="container contact-grid">
             <div class="contact-info">
                 <h3>Контакти для зв'язку</h3>
-                <p>Ми завжди на зв'язку та готові відповісти на будь-які ваші запитання.</p>
-                <br>
-                <div class="contact-item">📱 <strong>Телефон:</strong> [Твій номер телефону]</div>
-                <div class="contact-item">💬 <strong>Telegram Чат:</strong> [Твій юзернейм або посилання]</div>
-                <div class="contact-item">📍 <strong>Локація:</strong> м. Миронівка та Київська область</div>
+                <p style="margin-bottom: 30px; font-size: 18px;">Ми завжди на зв'язку та готові відповісти на будь-які ваші запитання.</p>
+                
+                <div class="contact-item">
+                    📱 <span><strong>Телефон:</strong> <br> [Твій номер телефону]</span>
+                </div>
+                <div class="contact-item">
+                    💬 <span><strong>Telegram Чат:</strong> <br> [Твій юзернейм]</span>
+                </div>
+                <div class="contact-item">
+                    📍 <span><strong>Локація:</strong> <br> м. Миронівка та Київська обл.</span>
+                </div>
             </div>
+            
             <div class="contact-form">
                 <h3>Залишити заявку</h3>
                 <form action="#" method="POST" onsubmit="alert('Форму налаштовано!'); return false;">
                     <div class="form-group">
                         <label for="name">Ваше ім'я</label>
-                        <input type="text" id="name" required placeholder="Введіть ваше ім'я">
+                        <input type="text" id="name" required placeholder="Як до вас звертатися?">
                     </div>
                     <div class="form-group">
                         <label for="phone">Номер телефону</label>
                         <input type="tel" id="phone" required placeholder="+380...">
                     </div>
+                    
                     <div class="form-group">
-                        <label for="object">Що потрібно охороняти?</label>
-                        <select id="object">
-                            <option value="house">Приватний будинок / Дача</option>
-                            <option value="apartment">Квартира</option>
-                            <option value="shop">Магазин / Кав'ярню</option>
-                            <option value="warehouse">Склад / Базу</option>
+                        <label for="objectSelect">Що вас цікавить?</label>
+                        <select id="objectSelect" onchange="toggleMatryoshka()">
+                            <option value="none">Оберіть послугу...</option>
+                            <option value="house">Фізична охорона (Будинок / Бізнес)</option>
                             <option value="cameras">Встановлення камер / Сигналізації</option>
+                            <option value="consult">Просто консультація</option>
                         </select>
                     </div>
+
+                    <!-- Динамічне поле (Матрьошка форми) -->
+                    <div class="form-group" id="dynamicField">
+                        <label for="extraInfo">Скільки камер потрібно? (Приблизно)</label>
+                        <input type="text" id="extraInfo" placeholder="Наприклад: 2 камери на вулицю">
+                    </div>
+
                     <button type="submit" class="btn-submit">Надіслати заявку</button>
                 </form>
             </div>
@@ -476,5 +582,48 @@
         </div>
     </footer>
 
+    <script>
+        // --- Скрипт для Акордеону (Матрьошки послуг) ---
+        const accordions = document.querySelectorAll('.accordion-header');
+        
+        accordions.forEach(acc => {
+            acc.addEventListener('click', function() {
+                // Закриваємо інші відкриті
+                accordions.forEach(otherAcc => {
+                    if (otherAcc !== this && otherAcc.classList.contains('active')) {
+                        otherAcc.classList.remove('active');
+                        otherAcc.nextElementSibling.style.maxHeight = null;
+                        otherAcc.nextElementSibling.classList.remove('show');
+                    }
+                });
+
+                // Перемикаємо поточний
+                this.classList.toggle('active');
+                const content = this.nextElementSibling;
+                
+                if (this.classList.contains('active')) {
+                    content.classList.add('show');
+                    content.style.maxHeight = content.scrollHeight + 40 + "px"; // + padding
+                } else {
+                    content.classList.remove('show');
+                    content.style.maxHeight = null;
+                }
+            });
+        });
+
+        // --- Скрипт для динамічної форми (Матрьошка форми) ---
+        function toggleMatryoshka() {
+            const select = document.getElementById('objectSelect');
+            const dynamicField = document.getElementById('dynamicField');
+            
+            if (select.value === 'cameras') {
+                dynamicField.classList.add('show');
+                dynamicField.style.maxHeight = "100px";
+            } else {
+                dynamicField.classList.remove('show');
+                dynamicField.style.maxHeight = null;
+            }
+        }
+    </script>
 </body>
 </html>
