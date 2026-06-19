@@ -106,7 +106,7 @@
 
         .hero p {
             font-size: 20px;
-            max-width: 750px;
+            max-width: 850px;
             margin: 0 auto 30px auto;
             opacity: 0.9;
         }
@@ -204,13 +204,32 @@
             transition: max-height 0.4s ease-out, padding 0.4s ease;
             background: #fff;
             padding: 0 25px;
-            color: #555;
+            color: #444;
             font-size: 16px;
         }
 
         .accordion-content.show {
             padding: 20px 25px;
             border-top: 1px solid var(--border-color);
+        }
+
+        .accordion-content ul {
+            list-style-type: none;
+            margin-top: 10px;
+        }
+
+        .accordion-content li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 8px;
+        }
+
+        .accordion-content li::before {
+            content: '🛡️';
+            position: absolute;
+            left: 0;
+            top: 2px;
+            font-size: 12px;
         }
         /* -------------------------- */
 
@@ -321,7 +340,6 @@
             border-radius: 8px;
         }
         
-        /* Клікабельні посилання в контактах */
         .contact-link {
             color: var(--text-light);
             text-decoration: none;
@@ -444,7 +462,7 @@
             <nav>
                 <ul>
                     <li><a href="#home">Головна</a></li>
-                    <li><a href="#prices">Прайс</a></li>
+                    <li><a href="#prices">Послуги</a></li>
                     <li><a href="#tech">Обладнання</a></li>
                     <li><a href="#contacts">Контакти</a></li>
                 </ul>
@@ -455,7 +473,7 @@
     <section id="home" class="hero">
         <div class="container">
             <h1>Безпека — це не розкіш.<br>Це твій <span>спокій</span>.</h1>
-            <p>Коли ти йдеш на роботу, їдеш у відпустку чи зачиняєш свій магазин на ніч — чи впевнений ти, що все під контролем? ARES Security — захищає тут і зараз.</p>
+            <p>Надійний захист вашого бізнесу, майна та близьких у Миронівці та районі. Ми працюємо на випередження, щоб ви могли спати спокійно.</p>
         </div>
     </section>
 
@@ -468,45 +486,89 @@
                 
                 <div class="accordion-item">
                     <button class="accordion-header">
-                        🏡 Приватні будинки / Дачі 
+                        🏡 Охорона приватних будинків, дач та котеджів 
                         <span class="price-tag">від 4 500 грн / міс</span>
                         <span class="icon-plus">+</span>
                     </button>
                     <div class="accordion-content">
-                        <p><strong>Що входить:</strong> Регулярний обхід території, контроль периметру, миттєве реагування на позаштатні ситуації, перевірка замків та вікон під час вашої відсутності.</p>
+                        <p><strong>Що саме входить у послугу:</strong></p>
+                        <ul>
+                            <li>Регулярний патруль периметру та прибудинкової території.</li>
+                            <li>Фізична перевірка цілісності вікон, дверей та замків під час вашої відсутності.</li>
+                            <li>Миттєве реагування на спрацювання сигналізації або підозрілу активність.</li>
+                            <li>Запобігання крадіжкам, вандалізму та незаконному проникненню.</li>
+                            <li>Візуальний контроль за відсутністю пожежі чи затоплення.</li>
+                        </ul>
                     </div>
                 </div>
 
                 <div class="accordion-item">
                     <button class="accordion-header">
-                        🏢 Квартири
+                        🏢 Нагляд за квартирами (відпустка / відрядження)
                         <span class="price-tag">від 3 000 грн / міс</span>
                         <span class="icon-plus">+</span>
                     </button>
                     <div class="accordion-content">
-                        <p><strong>Що входить:</strong> Охорона під час вашої тривалої відсутності (відпустка, відрядження), контроль доступу, регулярний огляд дверей та вікон.</p>
+                        <p><strong>Що саме входить у послугу:</strong></p>
+                        <ul>
+                            <li>Контроль доступу та регулярний огляд вхідних дверей/замків.</li>
+                            <li>Виїмка пошти зі скриньки (щоб не привертати увагу злодіїв переповненою скринькою).</li>
+                            <li>Оперативне прибуття на об'єкт у разі скарг сусідів чи спрацювання датчиків.</li>
+                            <li>Огляд на предмет витоку води або газу за потреби.</li>
+                        </ul>
                     </div>
                 </div>
 
                 <div class="accordion-item">
                     <button class="accordion-header">
-                        💼 Магазини, Кав'ярні, МАФі
+                        💼 Охорона бізнесу (Магазини, МАФи, Кав'ярні)
                         <span class="price-tag">від 8 000 грн / міс</span>
                         <span class="icon-plus">+</span>
                     </button>
                     <div class="accordion-content">
-                        <p><strong>Що входить:</strong> Фізична присутність на об'єкті, вирішення конфліктних ситуацій з відвідувачами, захист від крадіжок, мародерства та хуліганства.</p>
+                        <p><strong>Що саме входить у послугу:</strong></p>
+                        <ul>
+                            <li>Постійна фізична присутність охоронця на об'єкті у робочий (або нічний) час.</li>
+                            <li>Вирішення конфліктних ситуацій з агресивними відвідувачами.</li>
+                            <li>Захист товару та каси від крадіжок і мародерства.</li>
+                            <li>Контроль відкриття та закриття торгової точки.</li>
+                            <li>Миттєве реагування на тривожну кнопку (КТС).</li>
+                        </ul>
                     </div>
                 </div>
 
                 <div class="accordion-item">
                     <button class="accordion-header">
-                        🚜 Склади, Бази, Агросектор
+                        🚜 Промислова охорона (Склади, Бази, Агросектор)
                         <span class="price-tag">від 12 000 грн / міс</span>
                         <span class="icon-plus">+</span>
                     </button>
                     <div class="accordion-content">
-                        <p><strong>Що входить:</strong> Організація контрольно-пропускного пункту (КПП), ведення журналу обліку, охорона техніки, патрулювання великих територій 24/7.</p>
+                        <p><strong>Що саме входить у послугу:</strong></p>
+                        <ul>
+                            <li>Облаштування контрольно-пропускного пункту (КПП) зі шлагбаумом.</li>
+                            <li>Перевірка документів, огляд транспорту та ведення журналів обліку вантажів.</li>
+                            <li>Цілодобове патрулювання великих відкритих територій (24/7).</li>
+                            <li>Захист сільгосптехніки, паливно-мастильних матеріалів та врожаю від розкрадання.</li>
+                            <li>Контроль за дотриманням внутрішнього розпорядку персоналом.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        🛡️ Супровід цінних вантажів / Особиста охорона
+                        <span class="price-tag">Індивідуально</span>
+                        <span class="icon-plus">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p><strong>Що саме входить у послугу:</strong></p>
+                        <ul>
+                            <li>Фізичний супровід та захист матеріальних цінностей під час транспортування.</li>
+                            <li>Особиста безпека клієнта під час ділових зустрічей чи масових заходів.</li>
+                            <li>Розробка безпечного маршруту пересування.</li>
+                            <li>Повна конфіденційність та готовність діяти в екстремальних умовах.</li>
+                        </ul>
                     </div>
                 </div>
 
@@ -516,27 +578,28 @@
 
         <section id="tech" class="tech-box">
             <h3>📹 Технічна безпека (Камери та Сигналізація)</h3>
-            <p>Бажаєте посилити захист свого об'єкта сучасними технологіями? За бажанням клієнта ми здійснюємо підбір та професійне встановлення:</p>
+            <p>Бажаєте посилити захист свого об'єкта сучасними технологіями? Ми допоможемо спроєктувати та встановити надійну систему безпеки:</p>
             <ul>
-                <li><strong>Камер відеоспостереження</strong> (перегляд онлайн з телефона з будь-якої точки світу).</li>
-                <li><strong>Систем сигналізації та датчиків руху</strong> (миттєве сповіщення про проникнення).</li>
+                <li><strong>Відеоспостереження (IP-камери):</strong> Переглядайте камери в режимі реального часу зі свого смартфона з будь-якої точки світу. Збереження записів в архів.</li>
+                <li><strong>Охоронна сигналізація:</strong> Датчики руху, відкриття дверей, розбиття скла. Миттєве push-сповіщення вам на телефон.</li>
+                <li><strong>Датчики безпеки:</strong> Захист від пожежі (датчики диму) та затоплення (перекриття води).</li>
             </ul>
-            <p style="margin-top: 15px; color: #e74c3c; font-weight: bold; font-size: 14px;">⚠️ Обладнання та монтаж оплачуються окремо за кошти клієнта.</p>
+            <p style="margin-top: 15px; color: #e74c3c; font-weight: bold; font-size: 14px;">⚠️ Примітка: Обладнання та монтажні роботи підбираються під ваш бюджет і оплачуються окремо за кошти клієнта.</p>
         </section>
 
         <section class="legal-box">
             <h3>📄 Юридична гарантія (Працюємо офіційно)</h3>
-            <p>За вашим бажанням ми укладаємо <strong>офіційний Договір</strong> на надання послуг.</p>
+            <p>Ми цінуємо довіру, тому готові закріпити нашу співпрацю офіційним <strong>Договором надання охоронних послуг</strong>.</p>
             <ul>
-                <li><strong>Чіткі обов'язки:</strong> Усі завдання охорони прописані на папері.</li>
-                <li><strong>Матеріальна відповідальність:</strong> Ми відповідаємо за ваше майно юридично.</li>
-                <li><strong>Конфіденційність:</strong> Ваші таємниці захищені договором про нерозголошення.</li>
+                <li><strong>Чіткий регламент:</strong> Усі завдання, пости та графіки охорони прописані на папері.</li>
+                <li><strong>Матеріальна відповідальність:</strong> Ми несемо юридичну відповідальність за довірене нам майно.</li>
+                <li><strong>Повна конфіденційність:</strong> Комерційні таємниці та ваше особисте життя захищені договором про нерозголошення інформації (NDA).</li>
             </ul>
         </section>
 
         <section class="telegram-banner">
             <h3>📢 Наш Telegram-канал</h3>
-            <p>Новини безпеки Миронівки, звіти про роботу та корисні поради для захисту майна.</p>
+            <p>Новини безпеки Миронівки, звіти про нашу роботу та корисні поради для захисту вашого майна.</p>
             <a href="https://t.me/+Rh-oSdEnpbswYWQ6" target="_blank" class="btn-tg">Приєднатися до каналу</a>
         </section>
 
@@ -546,25 +609,37 @@
         <div class="container contact-grid">
             <div class="contact-info">
                 <h3>Контакти для зв'язку</h3>
-                <p style="margin-bottom: 30px; font-size: 18px;">Ми завжди на зв'язку та готові відповісти на будь-які ваші запитання. Натисніть на номер або посилання для зв'язку.</p>
+                <p style="margin-bottom: 30px; font-size: 18px;">Ми завжди на зв'язку та готові відповісти на будь-які ваші запитання. <b>Натисніть на картку нижче для швидкого зв'язку.</b></p>
                 
-                <div class="contact-item">
-                    <span>
-                        <strong>Телефон:</strong>
-                        <a href="tel:+380738822980" class="contact-link">📱 +380 73 882 29 80</a>
-                    </span>
-                </div>
-                <div class="contact-item">
-                    <span>
-                        <strong>Telegram Чат:</strong>
-                        <a href="https://t.me/+Rh-oSdEnpbswYWQ6" target="_blank" class="contact-link">💬 Приєднатися до чату</a>
-                    </span>
-                </div>
-                <div class="contact-item">
-                    <span>
+                <!-- Клікабельна картка ТЕЛЕФОНУ -->
+                <a href="tel:+380738822980" style="text-decoration: none; display: block; margin-bottom: 20px;">
+                    <div class="contact-item" style="margin-bottom: 0; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <span style="font-size: 24px; margin-right: 15px;">📱</span>
+                        <div>
+                            <strong>Телефон:</strong>
+                            <span style="color: white; font-size: 18px; font-weight: bold;">+380 73 882 29 80</span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Клікабельна картка TELEGRAM -->
+                <a href="https://t.me/+Rh-oSdEnpbswYWQ6" target="_blank" style="text-decoration: none; display: block; margin-bottom: 20px;">
+                    <div class="contact-item" style="margin-bottom: 0; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <span style="font-size: 24px; margin-right: 15px;">💬</span>
+                        <div>
+                            <strong>Telegram Чат:</strong>
+                            <span style="color: var(--accent-color); font-size: 18px; font-weight: bold; text-decoration: underline;">Написати нам у Telegram</span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Картка ЛОКАЦІЇ -->
+                <div class="contact-item" style="margin-bottom: 20px;">
+                    <span style="font-size: 24px; margin-right: 15px;">📍</span>
+                    <div>
                         <strong>Локація:</strong>
-                        <br>📍 м. Миронівка
-                    </span>
+                        <span style="color: white; font-size: 18px;">м. Миронівка та Київська область</span>
+                    </div>
                 </div>
             </div>
             
@@ -581,19 +656,23 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="objectSelect">Що вас цікавить?</label>
-                        <select id="objectSelect" onchange="toggleMatryoshka()">
-                            <option value="none">Оберіть послугу...</option>
-                            <option value="house">Фізична охорона (Будинок / Бізнес)</option>
-                            <option value="cameras">Встановлення камер / Сигналізації</option>
-                            <option value="consult">Просто консультація</option>
+                        <label for="objectSelect">Оберіть послугу, яка вас цікавить:</label>
+                        <select id="objectSelect" onchange="toggleMatryoshka()" required>
+                            <option value="none" disabled selected>Натисніть, щоб обрати...</option>
+                            <option value="house">🏡 Охорона приватного будинку / дачі</option>
+                            <option value="apartment">🏢 Нагляд за квартирою</option>
+                            <option value="commercial">💼 Охорона бізнесу (Магазин / Кав'ярня)</option>
+                            <option value="warehouse">🚜 Промислова охорона (Склад / База / Агро)</option>
+                            <option value="escort">🛡️ Супровід вантажів / Особиста охорона</option>
+                            <option value="cameras">📹 Встановлення камер / Сигналізації</option>
+                            <option value="consult">❓ Потрібна просто консультація</option>
                         </select>
                     </div>
 
                     <!-- Динамічне поле (Матрьошка форми) -->
                     <div class="form-group" id="dynamicField">
-                        <label for="extraInfo">Скільки камер потрібно? (Приблизно)</label>
-                        <input type="text" id="extraInfo" placeholder="Наприклад: 2 камери на вулицю">
+                        <label for="extraInfo">Опишіть коротко об'єкт (Скільки камер потрібно? Яка площа?)</label>
+                        <input type="text" id="extraInfo" placeholder="Наприклад: 3 камери на вулицю, 1 в приміщення">
                     </div>
 
                     <button type="submit" class="btn-submit" id="submitBtn">Надіслати заявку</button>
@@ -627,7 +706,7 @@
                 
                 if (this.classList.contains('active')) {
                     content.classList.add('show');
-                    content.style.maxHeight = content.scrollHeight + 40 + "px"; 
+                    content.style.maxHeight = content.scrollHeight + 50 + "px"; // + запас на відступи
                 } else {
                     content.classList.remove('show');
                     content.style.maxHeight = null;
@@ -642,7 +721,7 @@
             
             if (select.value === 'cameras') {
                 dynamicField.classList.add('show');
-                dynamicField.style.maxHeight = "100px";
+                dynamicField.style.maxHeight = "150px";
             } else {
                 dynamicField.classList.remove('show');
                 dynamicField.style.maxHeight = null;
@@ -654,7 +733,7 @@
             e.preventDefault(); 
             
             const btn = document.getElementById('submitBtn');
-            btn.innerText = 'Відправка...';
+            btn.innerText = 'Відправлення...';
             btn.style.opacity = '0.7';
 
             // Збираємо дані
@@ -664,17 +743,17 @@
             const service = serviceSelect.options[serviceSelect.selectedIndex].text;
             const extra = document.getElementById('extraInfo').value;
 
-            // ДАНІ БОТА ВЖЕ ВСТАВЛЕНІ
+            // ДАНІ БОТА (Не міняти)
             const botToken = '8913538423:AAFSB0cckRKokPJdRwJ1sUpulEhdgwNCrRg'; 
             const chatId = '8609439707'; 
 
-            // Формуємо текст повідомлення
+            // Формуємо текст повідомлення для Телеграму
             let message = `🚨 <b>НОВА ЗАЯВКА - ARES Security</b>\n\n`;
             message += `👤 <b>Ім'я:</b> ${name}\n`;
             message += `📞 <b>Телефон:</b> ${phone}\n`;
-            message += `🛠 <b>Послуга:</b> ${service}\n`;
+            message += `🛠 <b>Обрана послуга:</b> ${service}\n`;
             if (document.getElementById('objectSelect').value === 'cameras' && extra !== "") {
-                message += `📹 <b>Деталі (Камери):</b> ${extra}\n`;
+                message += `📝 <b>Деталі від клієнта:</b> ${extra}\n`;
             }
 
             // Відправка через Telegram API
@@ -704,7 +783,7 @@
                 }
             })
             .catch(error => {
-                alert('❌ Помилка підключення.');
+                alert('❌ Помилка підключення. Перевірте інтернет.');
                 console.error('Error:', error);
             })
             .finally(() => {
