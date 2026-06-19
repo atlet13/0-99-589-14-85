@@ -290,7 +290,7 @@
             display: inline-block;
             background-color: #fff;
             color: #229ED9;
-            padding: 15px 40px;
+            padding: 15px 30px;
             border-radius: 30px;
             text-decoration: none;
             font-weight: 800;
@@ -403,7 +403,7 @@
             opacity: 0;
         }
         #dynamicField.show {
-            max-height: 100px;
+            max-height: 150px;
             opacity: 1;
             margin-top: 20px;
         }
@@ -598,9 +598,13 @@
         </section>
 
         <section class="telegram-banner">
-            <h3>📢 Наш Telegram-канал</h3>
-            <p>Новини безпеки Миронівки, звіти про нашу роботу та корисні поради для захисту вашого майна.</p>
-            <a href="https://t.me/arest_sec" target="_blank" class="btn-tg">Приєднатися до каналу</a>
+            <h3>📢 Наш Telegram: Канал та Чат</h3>
+            <p>Підписуйтесь на канал, щоб читати новини безпеки Миронівки, та приєднуйтесь до чату для обговорень і швидкого зв'язку!</p>
+            
+            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 25px;">
+                <a href="https://t.me/arest_sec" target="_blank" class="btn-tg" style="margin-top: 0;">📰 Перейти в Канал</a>
+                <a href="https://t.me/+Rh-oSdEnpbswYWQ6" target="_blank" class="btn-tg" style="margin-top: 0;">💬 Приєднатися до Чату</a>
+            </div>
         </section>
 
     </main>
@@ -622,7 +626,7 @@
                     </div>
                 </a>
 
-                <!-- Клікабельна картка TELEGRAM -->
+                <!-- Клікабельна картка TELEGRAM ЧАТУ -->
                 <a href="https://t.me/+Rh-oSdEnpbswYWQ6" target="_blank" style="text-decoration: none; display: block; margin-bottom: 20px;">
                     <div class="contact-item" style="margin-bottom: 0; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                         <span style="font-size: 24px; margin-right: 15px;">💬</span>
@@ -743,7 +747,7 @@
             const service = serviceSelect.options[serviceSelect.selectedIndex].text;
             const extra = document.getElementById('extraInfo').value;
 
-            // ДАНІ БОТА (Не міняти)
+            // ДАНІ БОТА
             const botToken = '8913538423:AAFSB0cckRKokPJdRwJ1sUpulEhdgwNCrRg'; 
             const chatId = '8609439707'; 
 
