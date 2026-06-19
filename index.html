@@ -320,9 +320,28 @@
             padding: 15px;
             border-radius: 8px;
         }
+        
+        /* Клікабельні посилання в контактах */
+        .contact-link {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 20px;
+            transition: var(--transition);
+            display: inline-block;
+            margin-top: 5px;
+        }
+        
+        .contact-link:hover {
+            color: var(--accent-color);
+            transform: scale(1.05);
+        }
 
         .contact-item strong {
             color: var(--accent-color);
+            display: block;
+            font-size: 14px;
+            text-transform: uppercase;
         }
 
         .form-group {
@@ -445,7 +464,6 @@
         <section id="prices">
             <h2 class="section-title">Наші послуги (Натисніть для деталей)</h2>
             
-            <!-- АКОРДЕОН / МАТРЬОШКА -->
             <div class="accordion">
                 
                 <div class="accordion-item">
@@ -493,7 +511,6 @@
                 </div>
 
             </div>
-            <!-- КІНЕЦЬ АКОРДЕОНУ -->
 
         </section>
 
@@ -520,7 +537,7 @@
         <section class="telegram-banner">
             <h3>📢 Наш Telegram-канал</h3>
             <p>Новини безпеки Миронівки, звіти про роботу та корисні поради для захисту майна.</p>
-            <a href="https://t.me/arest_sec" target="_blank" class="btn-tg">Приєднатися до каналу</a>
+            <a href="https://t.me/+Rh-oSdEnpbswYWQ6" target="_blank" class="btn-tg">Приєднатися до каналу</a>
         </section>
 
     </main>
@@ -529,22 +546,31 @@
         <div class="container contact-grid">
             <div class="contact-info">
                 <h3>Контакти для зв'язку</h3>
-                <p style="margin-bottom: 30px; font-size: 18px;">Ми завжди на зв'язку та готові відповісти на будь-які ваші запитання.</p>
+                <p style="margin-bottom: 30px; font-size: 18px;">Ми завжди на зв'язку та готові відповісти на будь-які ваші запитання. Натисніть на номер або посилання для зв'язку.</p>
                 
                 <div class="contact-item">
-                    📱 <span><strong>Телефон:</strong> <br>380738822980</span>
+                    <span>
+                        <strong>Телефон:</strong>
+                        <a href="tel:+380738822980" class="contact-link">📱 +380 73 882 29 80</a>
+                    </span>
                 </div>
                 <div class="contact-item">
-                    💬 <span><strong>Telegram Чат:</strong> <br>https://t.me/+Rh-oSdEnpbswYWQ6</span>
+                    <span>
+                        <strong>Telegram Чат:</strong>
+                        <a href="https://t.me/+Rh-oSdEnpbswYWQ6" target="_blank" class="contact-link">💬 Приєднатися до чату</a>
+                    </span>
                 </div>
                 <div class="contact-item">
-                    📍 <span><strong>Локація:</strong> <br> м. Миронівка.</span>
+                    <span>
+                        <strong>Локація:</strong>
+                        <br>📍 м. Миронівка
+                    </span>
                 </div>
             </div>
             
             <div class="contact-form">
                 <h3>Залишити заявку</h3>
-                <form action="#" method="POST" onsubmit="alert('Форму налаштовано!'); return false;">
+                <form id="orderForm">
                     <div class="form-group">
                         <label for="name">Ваше ім'я</label>
                         <input type="text" id="name" required placeholder="Як до вас звертатися?">
@@ -570,7 +596,7 @@
                         <input type="text" id="extraInfo" placeholder="Наприклад: 2 камери на вулицю">
                     </div>
 
-                    <button type="submit" class="btn-submit">Надіслати заявку</button>
+                    <button type="submit" class="btn-submit" id="submitBtn">Надіслати заявку</button>
                 </form>
             </div>
         </div>
@@ -588,7 +614,6 @@
         
         accordions.forEach(acc => {
             acc.addEventListener('click', function() {
-                // Закриваємо інші відкриті
                 accordions.forEach(otherAcc => {
                     if (otherAcc !== this && otherAcc.classList.contains('active')) {
                         otherAcc.classList.remove('active');
@@ -597,13 +622,12 @@
                     }
                 });
 
-                // Перемикаємо поточний
                 this.classList.toggle('active');
                 const content = this.nextElementSibling;
                 
                 if (this.classList.contains('active')) {
                     content.classList.add('show');
-                    content.style.maxHeight = content.scrollHeight + 40 + "px"; // + padding
+                    content.style.maxHeight = content.scrollHeight + 40 + "px"; 
                 } else {
                     content.classList.remove('show');
                     content.style.maxHeight = null;
@@ -624,6 +648,70 @@
                 dynamicField.style.maxHeight = null;
             }
         }
+
+        // --- СКРИПТ ВІДПРАВКИ В TELEGRAM БОТА ---
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = 'Відправка...';
+            btn.style.opacity = '0.7';
+
+            // Збираємо дані
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const serviceSelect = document.getElementById('objectSelect');
+            const service = serviceSelect.options[serviceSelect.selectedIndex].text;
+            const extra = document.getElementById('extraInfo').value;
+
+            // ДАНІ БОТА ВЖЕ ВСТАВЛЕНІ
+            const botToken = '8913538423:AAFSB0cckRKokPJdRwJ1sUpulEhdgwNCrRg'; 
+            const chatId = '8609439707'; 
+
+            // Формуємо текст повідомлення
+            let message = `🚨 <b>НОВА ЗАЯВКА - ARES Security</b>\n\n`;
+            message += `👤 <b>Ім'я:</b> ${name}\n`;
+            message += `📞 <b>Телефон:</b> ${phone}\n`;
+            message += `🛠 <b>Послуга:</b> ${service}\n`;
+            if (document.getElementById('objectSelect').value === 'cameras' && extra !== "") {
+                message += `📹 <b>Деталі (Камери):</b> ${extra}\n`;
+            }
+
+            // Відправка через Telegram API
+            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: message,
+                    parse_mode: 'HTML'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.ok) {
+                    alert('✅ Заявку успішно відправлено! Ми зв\'яжемося з вами найближчим часом.');
+                    document.getElementById('orderForm').reset();
+                    document.getElementById('dynamicField').classList.remove('show');
+                    document.getElementById('dynamicField').style.maxHeight = null;
+                } else {
+                    alert('❌ Сталася помилка. Перевірте налаштування бота.');
+                    console.error(data);
+                }
+            })
+            .catch(error => {
+                alert('❌ Помилка підключення.');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                btn.innerText = 'Надіслати заявку';
+                btn.style.opacity = '1';
+            });
+        });
     </script>
 </body>
 </html>
