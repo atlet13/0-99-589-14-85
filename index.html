@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>VIP Escort Paris</title>
-    <!-- Font Awesome 6 (безкоштовно) -->
+    <title>VIP Escort Paris – Адмін панель</title>
+    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
@@ -19,11 +19,11 @@
             line-height: 1.5;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
             padding: 0 20px;
         }
-        /* header — як на скріні */
+        /* header */
         header {
             background: #0f0d0d;
             padding: 16px 0 10px;
@@ -62,30 +62,24 @@
             color: #d4af6b;
             cursor: pointer;
         }
-        /* герой + заголовок */
+        /* hero */
         .hero {
-            padding: 40px 0 20px;
+            padding: 30px 0 20px;
             background: #0f0d0d;
             border-bottom: 1px solid #242020;
         }
         .hero h1 {
-            font-size: 32px;
+            font-size: 30px;
             font-weight: 300;
             color: #f5e7d9;
             letter-spacing: 1px;
         }
         .hero h1 strong { color: #d4af6b; font-weight: 500; }
         .hero p {
-            font-size: 17px;
+            font-size: 16px;
             color: #b5aba1;
-            margin: 12px 0 18px;
+            margin: 10px 0 16px;
             max-width: 700px;
-        }
-        .hero .btn-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 14px;
-            margin-top: 10px;
         }
         .btn {
             display: inline-block;
@@ -109,61 +103,14 @@
         }
         .btn-primary:hover { background: #c09d55; border-color: #c09d55; }
         .btn-outline:hover { background: #d4af6b; color: #0b0b0b; }
+        .btn-danger {
+            background: #622;
+            border-color: #622;
+            color: #fff;
+        }
+        .btn-danger:hover { background: #a33; border-color: #a33; }
 
-        /* секція "Про нас" зі скульптурою */
-        .about {
-            padding: 50px 0;
-            background: #121010;
-            border-bottom: 1px solid #242020;
-        }
-        .about-grid {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 40px;
-        }
-        .about-text {
-            flex: 2 1 300px;
-        }
-        .about-text h2 {
-            font-size: 28px;
-            font-weight: 300;
-            color: #f0e2d3;
-            margin-bottom: 16px;
-            letter-spacing: 1px;
-        }
-        .about-text h2 span { color: #d4af6b; }
-        .about-text p {
-            color: #b5aba1;
-            font-size: 16px;
-            margin-bottom: 14px;
-            line-height: 1.7;
-        }
-        .about-statue {
-            flex: 1 1 180px;
-            text-align: center;
-            font-size: 100px;
-            color: #4a3f3a;
-            border: 1px solid #2f2828;
-            border-radius: 12px;
-            padding: 20px 10px;
-            background: #1a1616;
-            transition: 0.3s;
-        }
-        .about-statue i {
-            font-size: 120px;
-            color: #7a6b5a;
-            display: block;
-            margin-bottom: 6px;
-        }
-        .about-statue span {
-            font-size: 14px;
-            color: #7a6b5a;
-            letter-spacing: 2px;
-        }
-        .about-statue:hover { border-color: #d4af6b; }
-
-        /* галерея (як на скріні) */
+        /* gallery */
         .gallery {
             padding: 40px 0 50px;
             background: #0f0d0d;
@@ -184,7 +131,7 @@
         }
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 22px;
         }
         .gallery-card {
@@ -197,8 +144,8 @@
             padding-bottom: 14px;
         }
         .gallery-card:hover { border-color: #d4af6b; transform: scale(1.02); }
-        .gallery-card .img-placeholder {
-            height: 180px;
+        .gallery-card .media-placeholder {
+            height: 200px;
             background: #2a2121;
             display: flex;
             align-items: center;
@@ -206,6 +153,22 @@
             color: #5c4e42;
             font-size: 13px;
             background-image: repeating-linear-gradient(45deg, #241e1e 0px, #241e1e 10px, #1f1818 10px, #1f1818 20px);
+            position: relative;
+            overflow: hidden;
+        }
+        .gallery-card .media-placeholder img,
+        .gallery-card .media-placeholder video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .gallery-card .media-placeholder .play-icon {
+            position: absolute;
+            font-size: 48px;
+            color: rgba(212, 175, 107, 0.8);
+            background: rgba(0,0,0,0.4);
+            border-radius: 50%;
+            padding: 10px 14px;
         }
         .gallery-card h4 { font-weight: 400; color: #ede3d7; margin: 10px 0 2px; font-size: 17px; }
         .gallery-card p { color: #b5aa9c; font-size: 13px; padding: 0 8px; }
@@ -219,9 +182,70 @@
             font-size: 13px;
         }
 
-        /* контактні іконки — WhatsApp, Telegram, Email */
-        .contact-icons {
+        /* admin panel */
+        .admin-panel {
+            background: #1a1616;
             padding: 30px 0;
+            border-top: 1px solid #2f2828;
+            border-bottom: 1px solid #2f2828;
+        }
+        .admin-panel h2 { color: #d4af6b; font-weight: 300; letter-spacing: 1px; }
+        .admin-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 18px;
+            margin: 16px 0 10px;
+            align-items: flex-end;
+        }
+        .admin-form .field {
+            flex: 1 1 160px;
+            min-width: 130px;
+        }
+        .admin-form label {
+            display: block;
+            font-size: 13px;
+            color: #a39789;
+            margin-bottom: 2px;
+        }
+        .admin-form input, .admin-form textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0f0c0c;
+            border: 1px solid #312a2a;
+            color: #e0dcd9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .admin-form input:focus, .admin-form textarea:focus {
+            outline: 1px solid #d4af6b;
+            border-color: #d4af6b;
+        }
+        .admin-form textarea { resize: vertical; min-height: 50px; }
+        .admin-form .btn { padding: 10px 28px; font-size: 13px; }
+        .admin-list {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .admin-list .badge {
+            background: #2a2323;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            border: 1px solid #3d3230;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .admin-list .badge i { color: #d4af6b; cursor: pointer; }
+        .admin-list .badge i:hover { color: #f5e7d9; }
+        .admin-list .badge .del { color: #a66; }
+        .admin-list .badge .del:hover { color: #f44; }
+
+        /* contact icons */
+        .contact-icons {
+            padding: 25px 0;
             background: #0f0d0d;
             border-top: 1px solid #242020;
             border-bottom: 1px solid #242020;
@@ -245,81 +269,17 @@
             gap: 6px;
         }
         .contact-icons .icons-row a i {
-            font-size: 44px;
+            font-size: 40px;
             color: #d4af6b;
         }
         .contact-icons .icons-row a span {
-            font-size: 14px;
+            font-size: 13px;
             letter-spacing: 1px;
             color: #a39789;
         }
         .contact-icons .icons-row a:hover { transform: scale(1.1); }
         .contact-icons .icons-row a:hover i { color: #f5e7d9; }
 
-        /* адмін-панель (збережена, але стилізована) */
-        .admin-panel {
-            background: #1a1616;
-            padding: 30px 0;
-            border-top: 1px solid #2f2828;
-            border-bottom: 1px solid #2f2828;
-        }
-        .admin-panel h2 { color: #d4af6b; font-weight: 300; letter-spacing: 1px; }
-        .admin-form {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px 18px;
-            margin: 16px 0 10px;
-            align-items: flex-end;
-        }
-        .admin-form .field {
-            flex: 1 1 140px;
-            min-width: 120px;
-        }
-        .admin-form label {
-            display: block;
-            font-size: 13px;
-            color: #a39789;
-            margin-bottom: 2px;
-        }
-        .admin-form input {
-            width: 100%;
-            padding: 10px 12px;
-            background: #0f0c0c;
-            border: 1px solid #312a2a;
-            color: #e0dcd9;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        .admin-form input:focus { outline: 1px solid #d4af6b; border-color: #d4af6b; }
-        .admin-form .btn { padding: 10px 28px; font-size: 13px; }
-        .admin-list {
-            margin-top: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .admin-list .badge {
-            background: #2a2323;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 14px;
-            border: 1px solid #3d3230;
-        }
-        .admin-list .badge i { color: #d4af6b; margin-right: 6px; cursor: pointer; }
-        .admin-list .badge i:hover { color: #f5e7d9; }
-        .delete-btn {
-            background: #622;
-            border: none;
-            color: #fff;
-            padding: 2px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            margin-left: 8px;
-            cursor: pointer;
-        }
-        .delete-btn:hover { background: #a33; }
-
-        /* футер */
         footer {
             background: #0a0808;
             padding: 24px 0;
@@ -330,72 +290,47 @@
         }
         footer span { color: #d4af6b; }
 
-        /* адаптив */
         @media (max-width: 860px) {
             .header-right .nav-links { display: none; flex-direction: column; background: #141212; width: 100%; padding: 16px 0; gap: 14px; border-top: 1px solid #2f2828; margin-top: 12px; }
             .header-right .nav-links.active { display: flex; }
             .menu-toggle { display: block; }
             .header-flex { flex-wrap: wrap; }
             .header-right { margin-left: auto; }
-            .hero h1 { font-size: 26px; }
-            .about-statue { font-size: 70px; }
-            .about-statue i { font-size: 80px; }
+            .hero h1 { font-size: 24px; }
+            .admin-form .field { flex: 1 1 100%; }
         }
         @media (max-width: 500px) {
-            .hero h1 { font-size: 22px; }
+            .hero h1 { font-size: 20px; }
             .btn { padding: 8px 18px; font-size: 12px; }
-            .section-title { font-size: 24px; }
-            .contact-icons .icons-row { gap: 24px; }
-            .contact-icons .icons-row a i { font-size: 34px; }
-            .admin-form .field { flex: 1 1 100%; }
+            .section-title { font-size: 22px; }
+            .contact-icons .icons-row { gap: 20px; }
+            .contact-icons .icons-row a i { font-size: 32px; }
         }
     </style>
 </head>
 <body>
 
-<!-- HEADER — як на скріншоті -->
+<!-- HEADER -->
 <header>
     <div class="container header-flex">
         <div class="logo">Vip<span>Escort</span> Paris</div>
         <div class="header-right">
             <div class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></div>
             <nav class="nav-links" id="navLinks">
-                <a href="#about">Про нас</a>
                 <a href="#gallery">Галерея</a>
                 <a href="#admin">Адмін</a>
             </nav>
-            <a href="#contact" style="display:flex;align-items:center;"><i class="fas fa-phone-alt"></i> +33 1 23 45 67 89</a>
+            <a href="#contact"><i class="fas fa-phone-alt"></i> +33 1 23 45 67 89</a>
         </div>
     </div>
 </header>
 
-<!-- ГЕРОЙ (текст зі скріну) -->
+<!-- HERO -->
 <section class="hero">
     <div class="container">
         <h1>Vip Escort in Paris</h1>
         <p>Looking for quality in-call or out-call escorts in Paris, massage guru, or GFE vs PSE service?</p>
-        <div class="btn-group">
-            <a href="#gallery" class="btn btn-primary">Escorts photo Gallery</a>
-            <a href="#about" class="btn btn-outline">Дізнатися більше</a>
-        </div>
-    </div>
-</section>
-
-<!-- ПРО НАС + СКУЛЬПТУРА ВЕРШНИКА -->
-<section class="about" id="about">
-    <div class="container about-grid">
-        <div class="about-text">
-            <h2>Про <span>нас</span></h2>
-            <p><strong>VIP service based in Paris</strong> has enjoyed an excellent reputation in France escort and internationally for more than 10 years. When you contact us for a quality encounter in Paris, we are available to discuss your preferences and specific criteria.</p>
-            <p>We guarantee the selection of VIP escort models that will perfectly meet your expectations. Complete privacy and confidentiality – so you can feel safe on both sides.</p>
-            <p><i class="fas fa-check-circle" style="color:#d4af6b;"></i> 10+ років досвіду <br>
-               <i class="fas fa-check-circle" style="color:#d4af6b;"></i> Індивідуальний підхід та консьєрж-сервіс</p>
-        </div>
-        <div class="about-statue">
-            <i class="fas fa-horse-head"></i>
-            <span>✦ Еліт ✦</span>
-            <div style="font-size:14px;color:#5c4e42;margin-top:6px;">скульптура вершника</div>
-        </div>
+        <a href="#gallery" class="btn btn-primary">Escorts photo Gallery</a>
     </div>
 </section>
 
@@ -408,58 +343,59 @@
     </div>
 </section>
 
-<!-- КОНТАКТНІ ІКОНКИ: WhatsApp, Telegram, Email -->
-<section class="contact-icons" id="contact">
-    <div class="container">
-        <div class="icons-row">
-            <a href="#" target="_blank">
-                <i class="fab fa-whatsapp"></i>
-                <span>WhatsApp</span>
-            </a>
-            <a href="#" target="_blank">
-                <i class="fab fa-telegram-plane"></i>
-                <span>Telegram</span>
-            </a>
-            <a href="mailto:info@vipescortparis.com">
-                <i class="fas fa-envelope"></i>
-                <span>Email</span>
-            </a>
-            <a href="#">
-                <i class="fas fa-comment-dots"></i>
-                <span>Chat</span>
-            </a>
-        </div>
-    </div>
-</section>
-
-<!-- АДМІН-ПАНЕЛЬ (збережена функціональність) -->
+<!-- АДМІН-ПАНЕЛЬ (повноцінна) -->
 <section class="admin-panel" id="admin">
     <div class="container">
-        <h2><i class="fas fa-user-cog"></i> Адмін-панель</h2>
-        <p style="color:#a39789; margin-bottom:12px;">Додайте або видаліть анкету дівчини (дані зберігаються в браузері)</p>
+        <h2><i class="fas fa-user-cog"></i> Адмін-панель – керування анкетами</h2>
+        <p style="color:#a39789; margin-bottom:12px;">Додавайте моделей із фото, відео, ціною та описом. Дані зберігаються у вашому браузері.</p>
         <div class="admin-form" id="adminForm">
-            <div class="field"><label>Ім'я</label><input type="text" id="nameInput" placeholder="напр. Софі" required></div>
-            <div class="field"><label>Опис</label><input type="text" id="descInput" placeholder="вік / зріст / послуги"></div>
-            <div class="field"><label>Ціна</label><input type="text" id="priceInput" placeholder="від 500 €"></div>
-            <div class="field"><label>Фото (URL)</label><input type="text" id="imgInput" placeholder="https://... або порожньо"></div>
+            <div class="field">
+                <label>Ім'я <span style="color:#d4af6b;">*</span></label>
+                <input type="text" id="nameInput" placeholder="напр. Софі" required>
+            </div>
+            <div class="field">
+                <label>Опис</label>
+                <input type="text" id="descInput" placeholder="вік / зріст / послуги">
+            </div>
+            <div class="field">
+                <label>Ціна</label>
+                <input type="text" id="priceInput" placeholder="від 500 €">
+            </div>
+            <div class="field">
+                <label>Фото (URL)</label>
+                <input type="text" id="imgInput" placeholder="https://... або порожньо">
+            </div>
+            <div class="field">
+                <label>Відео (URL)</label>
+                <input type="text" id="videoInput" placeholder="https://... .mp4 або порожньо">
+            </div>
             <button type="button" class="btn btn-primary" id="addBtn"><i class="fas fa-plus"></i> Додати</button>
         </div>
         <div class="admin-list" id="adminList"></div>
     </div>
 </section>
 
-<!-- ФУТЕР -->
+<!-- КОНТАКТНІ ІКОНКИ -->
+<section class="contact-icons" id="contact">
+    <div class="container">
+        <div class="icons-row">
+            <a href="#" target="_blank"><i class="fab fa-whatsapp"></i><span>WhatsApp</span></a>
+            <a href="#" target="_blank"><i class="fab fa-telegram-plane"></i><span>Telegram</span></a>
+            <a href="mailto:info@vipescortparis.com"><i class="fas fa-envelope"></i><span>Email</span></a>
+            <a href="#"><i class="fas fa-comment-dots"></i><span>Chat</span></a>
+        </div>
+    </div>
+</section>
+
 <footer>
     <div class="container">
-        <p>© 2026 <span>VIP Escort Paris</span> — преміальний супровід. Всі права захищено.</p>
-        <p style="margin-top:4px;font-size:12px;opacity:0.7;">Конфіденційність — наш пріоритет.</p>
+        <p>© 2026 <span>VIP Escort Paris</span> — преміальний супровід. Конфіденційність — наш пріоритет.</p>
     </div>
 </footer>
 
 <!-- SCRIPTS -->
 <script>
     (function() {
-        // ==== DATA ====
         let girls = [];
 
         function loadData() {
@@ -467,13 +403,12 @@
             if (stored) {
                 try { girls = JSON.parse(stored); } catch(e) { girls = []; }
             } else {
+                // початкові дані з фото/відео прикладами
                 girls = [
-                    { id: 1, name: 'Софі', desc: '24 роки / 168 см / GFE, PSE', price: 'від 500 €', img: '' },
-                    { id: 2, name: 'Катрін', desc: '27 років / 172 см / інкалл, ауткалл', price: 'від 650 €', img: '' },
-                    { id: 3, name: 'Емма', desc: '22 роки / 165 см / GFE, масаж', price: 'від 450 €', img: '' },
-                    { id: 4, name: 'Жюлі', desc: '26 років / 170 см / PSE, подорожі', price: 'від 580 €', img: '' },
-                    { id: 5, name: 'Лора', desc: '23 роки / 163 см / GFE, івенти', price: 'від 520 €', img: '' },
-                    { id: 6, name: 'Ізабель', desc: '29 років / 175 см / бізнес-супровід', price: 'від 700 €', img: '' }
+                    { id: 1, name: 'Софі', desc: '24 роки / 168 см / GFE, PSE', price: 'від 500 €', img: 'https://placehold.co/400x400/2a2121/d4af6b?text=Софі', video: '' },
+                    { id: 2, name: 'Катрін', desc: '27 років / 172 см / інкалл, ауткалл', price: 'від 650 €', img: 'https://placehold.co/400x400/2a2121/d4af6b?text=Катрін', video: '' },
+                    { id: 3, name: 'Емма', desc: '22 роки / 165 см / GFE, масаж', price: 'від 450 €', img: 'https://placehold.co/400x400/2a2121/d4af6b?text=Емма', video: '' },
+                    { id: 4, name: 'Жюлі', desc: '26 років / 170 см / PSE, подорожі', price: 'від 580 €', img: 'https://placehold.co/400x400/2a2121/d4af6b?text=Жюлі', video: '' }
                 ];
                 saveData();
             }
@@ -492,10 +427,15 @@
             }
             let html = '';
             girls.forEach(g => {
-                const imgStyle = g.img ? `background-image:url('${g.img}'); background-size:cover; background-position:center;` : '';
+                const hasVideo = g.video && g.video.trim() !== '';
+                const mediaContent = hasVideo 
+                    ? `<video src="${g.video}" muted loop playsinline preload="metadata"></video><i class="fas fa-play-circle play-icon"></i>`
+                    : (g.img ? `<img src="${g.img}" alt="${g.name}" loading="lazy">` : '📸 Елітна модель');
                 html += `
                     <div class="gallery-card" data-id="${g.id}">
-                        <div class="img-placeholder" style="${imgStyle}">${g.img ? '' : '📸 Елітна модель'}</div>
+                        <div class="media-placeholder" onclick="this.querySelector('video')?.play()">
+                            ${mediaContent}
+                        </div>
                         <h4>${g.name}</h4>
                         <p>${g.desc || ''}</p>
                         <span class="price-tag">${g.price || 'за домовленістю'}</span>
@@ -514,15 +454,18 @@
             }
             let html = '';
             girls.forEach(g => {
+                const hasMedia = (g.img && g.img.trim()) || (g.video && g.video.trim());
                 html += `
                     <span class="badge">
                         <i class="fas fa-user"></i> ${g.name}
-                        <i class="fas fa-trash-alt" style="margin-left:10px; cursor:pointer;" data-id="${g.id}" title="Видалити"></i>
+                        ${hasMedia ? '<i class="fas fa-image" style="color:#6a8;"></i>' : ''}
+                        ${g.video && g.video.trim() ? '<i class="fas fa-video" style="color:#a8b;"></i>' : ''}
+                        <i class="fas fa-trash-alt del" data-id="${g.id}" title="Видалити"></i>
                     </span>
                 `;
             });
             list.innerHTML = html;
-            list.querySelectorAll('.fa-trash-alt').forEach(icon => {
+            list.querySelectorAll('.del').forEach(icon => {
                 icon.addEventListener('click', function(e) {
                     const id = parseInt(this.getAttribute('data-id'));
                     if (confirm(`Видалити модель "${girls.find(g => g.id === id)?.name || ''}"?`)) {
@@ -539,6 +482,7 @@
             const descInput = document.getElementById('descInput');
             const priceInput = document.getElementById('priceInput');
             const imgInput = document.getElementById('imgInput');
+            const videoInput = document.getElementById('videoInput');
 
             const name = nameInput.value.trim();
             if (!name) { alert('Введіть ім\'я моделі'); return; }
@@ -548,7 +492,8 @@
                 name: name,
                 desc: descInput.value.trim() || '',
                 price: priceInput.value.trim() || 'за домовленістю',
-                img: imgInput.value.trim() || ''
+                img: imgInput.value.trim() || '',
+                video: videoInput.value.trim() || ''
             };
             girls.push(newGirl);
             saveData();
@@ -556,6 +501,7 @@
             descInput.value = '';
             priceInput.value = '';
             imgInput.value = '';
+            videoInput.value = '';
             renderAll();
         }
 
@@ -585,6 +531,5 @@
         });
     })();
 </script>
-
 </body>
 </html>
