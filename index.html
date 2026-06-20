@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>VIP Escort Paris – Адмін панель</title>
-    <!-- Font Awesome 6 -->
+    <title>VIP Escort Paris</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
@@ -23,7 +22,6 @@
             margin: 0 auto;
             padding: 0 20px;
         }
-        /* header */
         header {
             background: #0f0d0d;
             padding: 16px 0 10px;
@@ -62,7 +60,6 @@
             color: #d4af6b;
             cursor: pointer;
         }
-        /* hero */
         .hero {
             padding: 30px 0 20px;
             background: #0f0d0d;
@@ -103,11 +100,7 @@
         }
         .btn-primary:hover { background: #c09d55; border-color: #c09d55; }
         .btn-outline:hover { background: #d4af6b; color: #0b0b0b; }
-        .btn-danger {
-            background: #622;
-            border-color: #622;
-            color: #fff;
-        }
+        .btn-danger { background: #622; border-color: #622; color: #fff; }
         .btn-danger:hover { background: #a33; border-color: #a33; }
 
         /* gallery */
@@ -152,7 +145,6 @@
             justify-content: center;
             color: #5c4e42;
             font-size: 13px;
-            background-image: repeating-linear-gradient(45deg, #241e1e 0px, #241e1e 10px, #1f1818 10px, #1f1818 20px);
             position: relative;
             overflow: hidden;
         }
@@ -181,67 +173,6 @@
             border-radius: 20px;
             font-size: 13px;
         }
-
-        /* admin panel */
-        .admin-panel {
-            background: #1a1616;
-            padding: 30px 0;
-            border-top: 1px solid #2f2828;
-            border-bottom: 1px solid #2f2828;
-        }
-        .admin-panel h2 { color: #d4af6b; font-weight: 300; letter-spacing: 1px; }
-        .admin-form {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px 18px;
-            margin: 16px 0 10px;
-            align-items: flex-end;
-        }
-        .admin-form .field {
-            flex: 1 1 160px;
-            min-width: 130px;
-        }
-        .admin-form label {
-            display: block;
-            font-size: 13px;
-            color: #a39789;
-            margin-bottom: 2px;
-        }
-        .admin-form input, .admin-form textarea {
-            width: 100%;
-            padding: 10px 12px;
-            background: #0f0c0c;
-            border: 1px solid #312a2a;
-            color: #e0dcd9;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        .admin-form input:focus, .admin-form textarea:focus {
-            outline: 1px solid #d4af6b;
-            border-color: #d4af6b;
-        }
-        .admin-form textarea { resize: vertical; min-height: 50px; }
-        .admin-form .btn { padding: 10px 28px; font-size: 13px; }
-        .admin-list {
-            margin-top: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .admin-list .badge {
-            background: #2a2323;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 14px;
-            border: 1px solid #3d3230;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .admin-list .badge i { color: #d4af6b; cursor: pointer; }
-        .admin-list .badge i:hover { color: #f5e7d9; }
-        .admin-list .badge .del { color: #a66; }
-        .admin-list .badge .del:hover { color: #f44; }
 
         /* contact icons */
         .contact-icons {
@@ -280,6 +211,128 @@
         .contact-icons .icons-row a:hover { transform: scale(1.1); }
         .contact-icons .icons-row a:hover i { color: #f5e7d9; }
 
+        /* admin panel overlay */
+        .admin-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(6px);
+        }
+        .admin-overlay.hidden { display: none; }
+        .admin-box {
+            background: #1a1616;
+            padding: 40px 35px;
+            border-radius: 12px;
+            border: 1px solid #d4af6b;
+            max-width: 600px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .admin-box .close-btn {
+            position: absolute;
+            top: 12px;
+            right: 18px;
+            font-size: 28px;
+            color: #a39789;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        .admin-box .close-btn:hover { color: #d4af6b; }
+        .admin-box h2 {
+            color: #d4af6b;
+            font-weight: 300;
+            letter-spacing: 1px;
+            margin-bottom: 18px;
+        }
+        .admin-box label {
+            display: block;
+            font-size: 14px;
+            color: #a39789;
+            margin: 12px 0 4px;
+        }
+        .admin-box input, .admin-box textarea {
+            width: 100%;
+            padding: 10px 14px;
+            background: #0f0c0c;
+            border: 1px solid #312a2a;
+            color: #e0dcd9;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+        .admin-box input:focus, .admin-box textarea:focus {
+            outline: 1px solid #d4af6b;
+            border-color: #d4af6b;
+        }
+        .admin-box textarea { resize: vertical; min-height: 50px; }
+        .admin-box .file-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .admin-box .file-group input[type="file"] {
+            flex: 1;
+            padding: 8px;
+            background: #0f0c0c;
+            border: 1px solid #312a2a;
+            color: #e0dcd9;
+            border-radius: 4px;
+        }
+        .admin-box .btn { margin-top: 14px; width: 100%; text-align: center; }
+        .admin-box .admin-list {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .admin-box .admin-list .badge {
+            background: #2a2323;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            border: 1px solid #3d3230;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .admin-box .admin-list .badge i { color: #d4af6b; cursor: pointer; }
+        .admin-box .admin-list .badge i:hover { color: #f5e7d9; }
+        .admin-box .admin-list .badge .del { color: #a66; }
+        .admin-box .admin-list .badge .del:hover { color: #f44; }
+        .admin-box .login-form { margin-top: 20px; }
+        .admin-box .login-form input { margin-bottom: 12px; }
+        .admin-box .error-msg { color: #e66; margin-top: 6px; }
+
+        /* open admin button */
+        .open-admin-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #d4af6b;
+            color: #0b0b0b;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(212, 175, 107, 0.4);
+            transition: 0.3s;
+        }
+        .open-admin-btn:hover { transform: scale(1.1); background: #c09d55; }
+
         footer {
             background: #0a0808;
             padding: 24px 0;
@@ -297,7 +350,6 @@
             .header-flex { flex-wrap: wrap; }
             .header-right { margin-left: auto; }
             .hero h1 { font-size: 24px; }
-            .admin-form .field { flex: 1 1 100%; }
         }
         @media (max-width: 500px) {
             .hero h1 { font-size: 20px; }
@@ -305,6 +357,7 @@
             .section-title { font-size: 22px; }
             .contact-icons .icons-row { gap: 20px; }
             .contact-icons .icons-row a i { font-size: 32px; }
+            .admin-box { padding: 24px 18px; }
         }
     </style>
 </head>
@@ -318,7 +371,6 @@
             <div class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></div>
             <nav class="nav-links" id="navLinks">
                 <a href="#gallery">Галерея</a>
-                <a href="#admin">Адмін</a>
             </nav>
             <a href="#contact"><i class="fas fa-phone-alt"></i> +33 1 23 45 67 89</a>
         </div>
@@ -334,7 +386,7 @@
     </div>
 </section>
 
-<!-- ГАЛЕРЕЯ -->
+<!-- GALLERY -->
 <section class="gallery" id="gallery">
     <div class="container">
         <h2 class="section-title"><i class="fas fa-camera-retro"></i> Escorts photo Gallery</h2>
@@ -343,39 +395,7 @@
     </div>
 </section>
 
-<!-- АДМІН-ПАНЕЛЬ (повноцінна) -->
-<section class="admin-panel" id="admin">
-    <div class="container">
-        <h2><i class="fas fa-user-cog"></i> Адмін-панель – керування анкетами</h2>
-        <p style="color:#a39789; margin-bottom:12px;">Додавайте моделей із фото, відео, ціною та описом. Дані зберігаються у вашому браузері.</p>
-        <div class="admin-form" id="adminForm">
-            <div class="field">
-                <label>Ім'я <span style="color:#d4af6b;">*</span></label>
-                <input type="text" id="nameInput" placeholder="напр. Софі" required>
-            </div>
-            <div class="field">
-                <label>Опис</label>
-                <input type="text" id="descInput" placeholder="вік / зріст / послуги">
-            </div>
-            <div class="field">
-                <label>Ціна</label>
-                <input type="text" id="priceInput" placeholder="від 500 €">
-            </div>
-            <div class="field">
-                <label>Фото (URL)</label>
-                <input type="text" id="imgInput" placeholder="https://... або порожньо">
-            </div>
-            <div class="field">
-                <label>Відео (URL)</label>
-                <input type="text" id="videoInput" placeholder="https://... .mp4 або порожньо">
-            </div>
-            <button type="button" class="btn btn-primary" id="addBtn"><i class="fas fa-plus"></i> Додати</button>
-        </div>
-        <div class="admin-list" id="adminList"></div>
-    </div>
-</section>
-
-<!-- КОНТАКТНІ ІКОНКИ -->
+<!-- CONTACT ICONS -->
 <section class="contact-icons" id="contact">
     <div class="container">
         <div class="icons-row">
@@ -393,22 +413,75 @@
     </div>
 </footer>
 
-<!-- SCRIPTS -->
+<!-- КНОПКА ВІДКРИТИ АДМІН -->
+<button class="open-admin-btn" id="openAdminBtn" title="Відкрити адмін-панель">
+    <i class="fas fa-user-cog"></i>
+</button>
+
+<!-- АДМІН-ПАНЕЛЬ (оверлей) -->
+<div class="admin-overlay hidden" id="adminOverlay">
+    <div class="admin-box">
+        <button class="close-btn" id="closeAdminBtn">&times;</button>
+        <h2><i class="fas fa-lock"></i> Адмін-панель</h2>
+
+        <!-- форма входу -->
+        <div id="loginForm" class="login-form">
+            <label>Введіть пароль</label>
+            <input type="password" id="passwordInput" placeholder="Пароль">
+            <button class="btn btn-primary" id="loginBtn">Увійти</button>
+            <div id="loginError" class="error-msg"></div>
+        </div>
+
+        <!-- контент адмінки (прихований) -->
+        <div id="adminContent" style="display:none;">
+            <p style="color:#a39789; margin-bottom:12px;">Додавайте моделей із фото та відео (завантаження з галереї пристрою).</p>
+            <form id="adminForm">
+                <label>Ім'я <span style="color:#d4af6b;">*</span></label>
+                <input type="text" id="nameInput" placeholder="напр. Софі" required>
+
+                <label>Опис</label>
+                <input type="text" id="descInput" placeholder="вік / зріст / послуги">
+
+                <label>Ціна</label>
+                <input type="text" id="priceInput" placeholder="від 500 €">
+
+                <label>Фото (завантажте файл)</label>
+                <div class="file-group">
+                    <input type="file" id="photoInput" accept="image/*">
+                </div>
+
+                <label>Відео (завантажте файл)</label>
+                <div class="file-group">
+                    <input type="file" id="videoInput" accept="video/*">
+                </div>
+
+                <button type="button" class="btn btn-primary" id="addBtn"><i class="fas fa-plus"></i> Додати модель</button>
+            </form>
+
+            <div style="margin-top:24px;">
+                <h3 style="color:#d4af6b; font-weight:300;">Додані моделі</h3>
+                <div class="admin-list" id="adminList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     (function() {
+        // ==== DATA ====
         let girls = [];
+        const ADMIN_PASSWORD = 'admin123'; // змініть на свій пароль
 
         function loadData() {
             const stored = localStorage.getItem('vipEscortGirls');
             if (stored) {
                 try { girls = JSON.parse(stored); } catch(e) { girls = []; }
             } else {
-                // початкові дані з фото/відео прикладами
                 girls = [
-                    { id: 1, name: 'Софі', desc: '24 роки / 168 см / GFE, PSE', price: 'від 500 €', img: 'https://placehold.co/400x400/2a2121/d4af6b?text=Софі', video: '' },
-                    { id: 2, name: 'Катрін', desc: '27 років / 172 см / інкалл, ауткалл', price: 'від 650 €', img: 'https://placehold.co/400x400/2a2121/d4af6b?text=Катрін', video: '' },
-                    { id: 3, name: 'Емма', desc: '22 роки / 165 см / GFE, масаж', price: 'від 450 €', img: 'https://placehold.co/400x400/2a2121/d4af6b?text=Емма', video: '' },
-                    { id: 4, name: 'Жюлі', desc: '26 років / 170 см / PSE, подорожі', price: 'від 580 €', img: 'https://placehold.co/400x400/2a2121/d4af6b?text=Жюлі', video: '' }
+                    { id: 1, name: 'Софі', desc: '24 роки / 168 см / GFE, PSE', price: 'від 500 €', img: '', video: '' },
+                    { id: 2, name: 'Катрін', desc: '27 років / 172 см / інкалл, ауткалл', price: 'від 650 €', img: '', video: '' },
+                    { id: 3, name: 'Емма', desc: '22 роки / 165 см / GFE, масаж', price: 'від 450 €', img: '', video: '' },
+                    { id: 4, name: 'Жюлі', desc: '26 років / 170 см / PSE, подорожі', price: 'від 580 €', img: '', video: '' }
                 ];
                 saveData();
             }
@@ -418,6 +491,7 @@
             localStorage.setItem('vipEscortGirls', JSON.stringify(girls));
         }
 
+        // ==== RENDER GALLERY ====
         function renderGallery() {
             const grid = document.getElementById('galleryGrid');
             if (!grid) return;
@@ -428,13 +502,18 @@
             let html = '';
             girls.forEach(g => {
                 const hasVideo = g.video && g.video.trim() !== '';
-                const mediaContent = hasVideo 
-                    ? `<video src="${g.video}" muted loop playsinline preload="metadata"></video><i class="fas fa-play-circle play-icon"></i>`
-                    : (g.img ? `<img src="${g.img}" alt="${g.name}" loading="lazy">` : '📸 Елітна модель');
+                let mediaHtml = '';
+                if (hasVideo) {
+                    mediaHtml = `<video src="${g.video}" muted loop playsinline preload="metadata"></video><i class="fas fa-play-circle play-icon"></i>`;
+                } else if (g.img && g.img.trim()) {
+                    mediaHtml = `<img src="${g.img}" alt="${g.name}" loading="lazy">`;
+                } else {
+                    mediaHtml = '📸 Елітна модель';
+                }
                 html += `
                     <div class="gallery-card" data-id="${g.id}">
                         <div class="media-placeholder" onclick="this.querySelector('video')?.play()">
-                            ${mediaContent}
+                            ${mediaHtml}
                         </div>
                         <h4>${g.name}</h4>
                         <p>${g.desc || ''}</p>
@@ -445,6 +524,7 @@
             grid.innerHTML = html;
         }
 
+        // ==== RENDER ADMIN LIST ====
         function renderAdminList() {
             const list = document.getElementById('adminList');
             if (!list) return;
@@ -471,62 +551,130 @@
                     if (confirm(`Видалити модель "${girls.find(g => g.id === id)?.name || ''}"?`)) {
                         girls = girls.filter(g => g.id !== id);
                         saveData();
-                        renderAll();
+                        renderGallery();
+                        renderAdminList();
                     }
                 });
             });
         }
 
+        // ==== ДОДАТИ МОДЕЛЬ (з фото/відео) ====
         function addGirl() {
             const nameInput = document.getElementById('nameInput');
             const descInput = document.getElementById('descInput');
             const priceInput = document.getElementById('priceInput');
-            const imgInput = document.getElementById('imgInput');
+            const photoInput = document.getElementById('photoInput');
             const videoInput = document.getElementById('videoInput');
 
             const name = nameInput.value.trim();
             if (!name) { alert('Введіть ім\'я моделі'); return; }
 
-            const newGirl = {
-                id: Date.now(),
-                name: name,
-                desc: descInput.value.trim() || '',
-                price: priceInput.value.trim() || 'за домовленістю',
-                img: imgInput.value.trim() || '',
-                video: videoInput.value.trim() || ''
-            };
-            girls.push(newGirl);
-            saveData();
-            nameInput.value = '';
-            descInput.value = '';
-            priceInput.value = '';
-            imgInput.value = '';
-            videoInput.value = '';
-            renderAll();
+            // перетворюємо файли на base64
+            const photoFile = photoInput.files[0];
+            const videoFile = videoInput.files[0];
+
+            let imgPromise = Promise.resolve('');
+            let videoPromise = Promise.resolve('');
+
+            if (photoFile) {
+                imgPromise = new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(photoFile);
+                });
+            }
+            if (videoFile) {
+                videoPromise = new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(videoFile);
+                });
+            }
+
+            Promise.all([imgPromise, videoPromise]).then(([imgData, videoData]) => {
+                const newGirl = {
+                    id: Date.now(),
+                    name: name,
+                    desc: descInput.value.trim() || '',
+                    price: priceInput.value.trim() || 'за домовленістю',
+                    img: imgData || '',
+                    video: videoData || ''
+                };
+                girls.push(newGirl);
+                saveData();
+                nameInput.value = '';
+                descInput.value = '';
+                priceInput.value = '';
+                photoInput.value = '';
+                videoInput.value = '';
+                renderGallery();
+                renderAdminList();
+            });
         }
 
-        function renderAll() {
-            renderGallery();
+        // ==== АДМІН ОВЕРЛЕЙ ====
+        const overlay = document.getElementById('adminOverlay');
+        const openBtn = document.getElementById('openAdminBtn');
+        const closeBtn = document.getElementById('closeAdminBtn');
+        const loginForm = document.getElementById('loginForm');
+        const adminContent = document.getElementById('adminContent');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginError = document.getElementById('loginError');
+
+        function openAdmin() {
+            overlay.classList.remove('hidden');
+            loginForm.style.display = 'block';
+            adminContent.style.display = 'none';
+            passwordInput.value = '';
+            loginError.textContent = '';
+            // оновлюємо список
             renderAdminList();
         }
 
-        loadData();
-        renderAll();
+        function closeAdmin() {
+            overlay.classList.add('hidden');
+        }
 
-        document.getElementById('addBtn').addEventListener('click', addGirl);
-        document.getElementById('nameInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') { e.preventDefault(); addGirl(); }
+        openBtn.addEventListener('click', openAdmin);
+        closeBtn.addEventListener('click', closeAdmin);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeAdmin();
         });
 
-        // бургер-меню
+        loginBtn.addEventListener('click', function() {
+            const pass = passwordInput.value.trim();
+            if (pass === ADMIN_PASSWORD) {
+                loginForm.style.display = 'none';
+                adminContent.style.display = 'block';
+                renderAdminList();
+            } else {
+                loginError.textContent = 'Невірний пароль. Спробуйте ще раз.';
+            }
+        });
+
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loginBtn.click();
+        });
+
+        // ==== ДОДАТИ (кнопка) ====
+        document.getElementById('addBtn').addEventListener('click', addGirl);
+
+        // ==== БУРГЕР ====
         document.getElementById('menuToggle').addEventListener('click', function() {
             document.getElementById('navLinks').classList.toggle('active');
         });
 
+        // ==== INIT ====
+        loadData();
+        renderGallery();
+
+        // якщо закриваємо адмінку — оновлюємо галерею
         window.addEventListener('storage', function(e) {
             if (e.key === 'vipEscortGirls') {
                 loadData();
-                renderAll();
+                renderGallery();
+                if (!overlay.classList.contains('hidden')) renderAdminList();
             }
         });
     })();
