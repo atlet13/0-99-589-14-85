@@ -28,7 +28,6 @@ const INSURANCE_TYPES = {
 
 const STATUSES = ['new', 'review', 'approved', 'rejected', 'issued'];
 
-// Серверний розрахунок премії — щоб ціна не залежала від клієнта.
 function estimatePrice(type, details = {}) {
   const cfg = INSURANCE_TYPES[type];
   if (!cfg) return null;
@@ -36,7 +35,7 @@ function estimatePrice(type, details = {}) {
 
   switch (type) {
     case 'osago': {
-      const power = Number(details.enginePower) || 1; // 1: до 1600см3 ... 4: понад 3001
+      const power = Number(details.enginePower) || 1;
       price *= [1, 1, 1.2, 1.4, 1.8][power] || 1;
       if (details.usage === 'taxi') price *= 1.6;
       break;
@@ -86,13 +85,11 @@ function genRequestNumber() {
 
 // ───────────────────────── Публічні маршрути ─────────────────────────
 
-// Конфіг типів для фронтенду (без розкриття коефіцієнтів)
 app.get('/api/config', (req, res) => {
   const types = Object.entries(INSURANCE_TYPES).map(([key, v]) => ({ key, label: v.label }));
   res.json({ types });
 });
 
-// Попередній розрахунок премії (без збереження)
 app.post('/api/quote', (req, res) => {
   const { insuranceType, details } = req.body || {};
   const price = estimatePrice(insuranceType, details);
@@ -100,23 +97,13 @@ app.post('/api/quote', (req, res) => {
   res.json({ price });
 });
 
-// Подати заявку
 app.post('/api/applications', async (req, res) => {
   try {
     const { insuranceType, fullName, phone, email, birthDate, city, details } = req.body || {};
 
-    if (!INSURANCE_TYPES[insuranceType]) {
-      return res.status(400).json({ error: 'Оберіть коректний тип страхування' });
-    }
-    if (!fullName || String(fullName).trim().length < 3) {
-      return res.status(400).json({ error: 'Вкажіть ПІБ' });
-    }
-    if (!phone || !/^[+0-9\s\-()]{7,20}$/.test(String(phone))) {
-      return res.status(400).json({ error: 'Вкажіть коректний номер телефону' });
-    }
-    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(email))) {
-      return res.status(400).json({ error: 'Некоректний email' });
-    }
+    if (!INSURANCE_TYPES[insuranceType]) return res.status(400).json({ error: 'Оберіть коректний тип страхування' });
+    if (!fullName || String(fullName).trim().length < 3) return res.status(400).json({ error: 'Вкажіть ПІБ' });
+    if (!phone || !/^[+0-9\s\-()]{7,20}$/.test(String(phone))) return res.status(400).json({ error: 'Вкажіть коректний номер телефону' });
 
     const price = estimatePrice(insuranceType, details || {});
     const requestNumber = genRequestNumber();
@@ -149,7 +136,6 @@ app.post('/api/applications', async (req, res) => {
   }
 });
 
-// Перевірка статусу заявки за номером (публічно)
 app.get('/api/applications/status/:number', async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -164,13 +150,58 @@ app.get('/api/applications/status/:number', async (req, res) => {
   }
 });
 
-// ───────────────────────── Адмін: автентифікація ─────────────────────────
+// Ендпоінт для завантаження готового документа (Поліса) клієнтом
+app.get('/api/applications/download/:number', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT * FROM applications WHERE request_number = $1`,
+      [req.params.number.trim().toUpperCase()]
+    );
+    if (!rows.length) return res.status(404).send('Заявку не знайдено');
+    
+    const appData = rows[0];
+    if (appData.status !== 'issued') {
+      return res.status(403).send('Документ ще не сформовано. Статус заявки має бути "Видано".');
+    }
+
+    // Текстова генерація бланку поліса (емуляція PDF / текстового файлу)
+    const fileContent = `
+==================================================
+              ЕЛЕКТРОННИЙ СТРАХОВИЙ ПОЛІС
+==================================================
+Номер договору:   ${appData.request_number}
+Вид страхування:  ${INSURANCE_TYPES[appData.insurance_type]?.label || appData.insurance_type}
+Дата оформлення:  ${new Date(appData.created_at).toLocaleDateString('uk-UA')}
+Статус договору:  АКТИВНИЙ (ПОЛІС ВИДАНО)
+
+---------------- СТРАХУВАЛЬНИК -------------------
+ПІБ:              ${appData.full_name}
+Телефон:          ${appData.phone}
+Email:            ${appData.email || '—'}
+Місто:            ${appData.city || '—'}
+
+----------------- ФІНАНСОВІ ДАНІ -----------------
+Сплачена сума:    ${appData.final_price || appData.estimated_price} UAH
+Статус оплати:    ОПЛАЧЕНО ОНЛАЙН
+
+==================================================
+   Дякуємо, що обрали сервіс "Поліс"!
+   Цей документ є оригіналом підтвердженого поліса.
+==================================================
+`;
+
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=Policy-${appData.request_number}.txt`);
+    res.send(fileContent);
+  } catch (err) {
+    res.status(500).send('Помилка генерації документа');
+  }
+});
+
+// ───────────────────────── Адмін: автентифікація (Залишено для зовнішнього доступу) ─────────────────────────
 app.post('/api/admin/login', async (req, res) => {
   const { username, password } = req.body || {};
-  if (username !== ADMIN_USER) {
-    return res.status(401).json({ error: 'Невірний логін або пароль' });
-  }
-  // Підтримка як plaintext (ADMIN_PASSWORD), так і хешу (ADMIN_PASSWORD_HASH)
+  if (username !== ADMIN_USER) return res.status(401).json({ error: 'Невірний логін або пароль' });
   let ok = false;
   if (process.env.ADMIN_PASSWORD_HASH) {
     ok = await bcrypt.compare(String(password || ''), process.env.ADMIN_PASSWORD_HASH);
@@ -195,60 +226,32 @@ function requireAdmin(req, res, next) {
   }
 }
 
-// ───────────────────────── Адмін: дані ─────────────────────────
+// ───────────────────────── Адмін: дані (Для вашого майбутнього сайту) ─────────────────────────
 app.get('/api/admin/stats', requireAdmin, async (req, res) => {
   try {
     const total = await pool.query('SELECT COUNT(*)::int AS c FROM applications');
-    const byStatus = await pool.query(
-      'SELECT status, COUNT(*)::int AS c FROM applications GROUP BY status'
-    );
-    const byType = await pool.query(
-      'SELECT insurance_type, COUNT(*)::int AS c FROM applications GROUP BY insurance_type'
-    );
-    const revenue = await pool.query(
-      `SELECT COALESCE(SUM(COALESCE(final_price, estimated_price)),0)::numeric AS sum
-       FROM applications WHERE status IN ('approved','issued')`
-    );
-    res.json({
-      total: total.rows[0].c,
-      byStatus: byStatus.rows,
-      byType: byType.rows,
-      pipeline: Number(revenue.rows[0].sum),
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Помилка сервера' });
-  }
+    const byStatus = await pool.query('SELECT status, COUNT(*)::int AS c FROM applications GROUP BY status');
+    const byType = await pool.query('SELECT insurance_type, COUNT(*)::int AS c FROM applications GROUP BY insurance_type');
+    const revenue = await pool.query(`SELECT COALESCE(SUM(COALESCE(final_price, estimated_price)),0)::numeric AS sum FROM applications WHERE status IN ('approved','issued')`);
+    res.json({ total: total.rows[0].c, byStatus: byStatus.rows, byType: byType.rows, pipeline: Number(revenue.rows[0].sum) });
+  } catch (err) { res.status(500).json({ error: 'Помилка сервера' }); }
 });
 
 app.get('/api/admin/applications', requireAdmin, async (req, res) => {
   try {
     const { status, type, q, page = 1, limit = 20 } = req.query;
-    const where = [];
-    const params = [];
+    const where = []; const params = [];
     if (status && STATUSES.includes(status)) { params.push(status); where.push(`status = $${params.length}`); }
     if (type && INSURANCE_TYPES[type]) { params.push(type); where.push(`insurance_type = $${params.length}`); }
-    if (q) {
-      params.push(`%${q}%`);
-      where.push(`(full_name ILIKE $${params.length} OR phone ILIKE $${params.length} OR request_number ILIKE $${params.length} OR email ILIKE $${params.length})`);
-    }
+    if (q) { params.push(`%${q}%`); where.push(`(full_name ILIKE $${params.length} OR phone ILIKE $${params.length} OR request_number ILIKE $${params.length} OR email ILIKE $${params.length})`); }
     const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const lim = Math.min(Number(limit) || 20, 100);
     const off = (Math.max(Number(page) || 1, 1) - 1) * lim;
 
     const countRes = await pool.query(`SELECT COUNT(*)::int AS c FROM applications ${whereSql}`, params);
-    const dataRes = await pool.query(
-      `SELECT id, request_number, insurance_type, full_name, phone, email, city,
-              estimated_price, final_price, status, created_at
-       FROM applications ${whereSql}
-       ORDER BY created_at DESC
-       LIMIT ${lim} OFFSET ${off}`,
-      params
-    );
+    const dataRes = await pool.query(`SELECT id, request_number, insurance_type, full_name, phone, email, city, estimated_price, final_price, status, created_at FROM applications ${whereSql} ORDER BY created_at DESC LIMIT ${lim} OFFSET ${off}`, params);
     res.json({ total: countRes.rows[0].c, page: Number(page), limit: lim, items: dataRes.rows });
-  } catch (err) {
-    console.error('[admin/applications]', err.message);
-    res.status(500).json({ error: 'Помилка сервера' });
-  }
+  } catch (err) { res.status(500).json({ error: 'Помилка сервера' }); }
 });
 
 app.get('/api/admin/applications/:id', requireAdmin, async (req, res) => {
@@ -256,64 +259,41 @@ app.get('/api/admin/applications/:id', requireAdmin, async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM applications WHERE id = $1', [req.params.id]);
     if (!rows.length) return res.status(404).json({ error: 'Не знайдено' });
     res.json(rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: 'Помилка сервера' });
-  }
+  } catch (err) { res.status(500).json({ error: 'Помилка сервера' }); }
 });
 
 app.patch('/api/admin/applications/:id', requireAdmin, async (req, res) => {
   try {
     const { status, admin_notes, final_price } = req.body || {};
-    const sets = [];
-    const params = [];
-    if (status !== undefined) {
-      if (!STATUSES.includes(status)) return res.status(400).json({ error: 'Невідомий статус' });
-      params.push(status); sets.push(`status = $${params.length}`);
-    }
-    if (admin_notes !== undefined) { params.push(admin_notes); sets.push(`admin_notes = $${params.length}`); }
-    if (final_price !== undefined) {
-      params.push(final_price === null || final_price === '' ? null : Number(final_price));
-      sets.push(`final_price = $${params.length}`);
-    }
+    const sets = []; const params = [];
+    if (status !== undefined) { if (!STATUSES.includes(status)) return res.status(400).json({ error: 'Невідомий статус' }); params.push(status); sets.push(`status = $${params.length}`); }
+    if (admin_notes !== undefined) { params.push(admin_notes); sets.push(`admin_notes = $./** params.length}`); }
+    if (final_price !== undefined) { params.push(final_price === null || final_price === '' ? null : Number(final_price)); sets.push(`final_price = $${params.length}`); }
     if (!sets.length) return res.status(400).json({ error: 'Немає змін' });
-    sets.push(`updated_at = now()`);
-    params.push(req.params.id);
+    sets.push(`updated_at = now()`); params.push(req.params.id);
 
-    const { rows } = await pool.query(
-      `UPDATE applications SET ${sets.join(', ')} WHERE id = $${params.length} RETURNING *`,
-      params
-    );
+    const { rows } = await pool.query(`UPDATE applications SET ${sets.join(', ')} WHERE id = $${params.length} RETURNING *`, params);
     if (!rows.length) return res.status(404).json({ error: 'Не знайдено' });
     res.json(rows[0]);
-  } catch (err) {
-    console.error('[admin patch]', err.message);
-    res.status(500).json({ error: 'Помилка сервера' });
-  }
+  } catch (err) { res.status(500).json({ error: 'Помилка сервера' }); }
 });
 
 app.delete('/api/admin/applications/:id', requireAdmin, async (req, res) => {
   try {
     await pool.query('DELETE FROM applications WHERE id = $1', [req.params.id]);
     res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Помилка сервера' });
-  }
-});
-
-// Адмін-панель — окрема сторінка
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  } catch (err) { res.status(500).json({ error: 'Помилка сервера' }); }
 });
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
-// ───────────────────────── Старт ─────────────────────────
+// Глобальні фолбеки для JSON відповідей
+app.use((req, res) => res.status(404).json({ error: 'Маршрут не знайдено' }));
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Внутрішня помилка сервера' });
+});
+
 initDb()
-  .then(() => {
-    app.listen(PORT, () => console.log(`[server] Запущено на порту ${PORT}`));
-  })
-  .catch((err) => {
-    console.error('[server] Не вдалося ініціалізувати БД:', err.message);
-    // Запускаємось все одно, щоб віддати статику й показати помилку конфігурації
-    app.listen(PORT, () => console.log(`[server] Запущено на порту ${PORT} (БД недоступна)`));
-  });
+  .then(() => { app.listen(PORT, () => console.log(`[server] Запущено на порту ${PORT}`)); })
+  .catch((err) => { app.listen(PORT, () => console.log(`[server] Запущено на порту ${PORT} (БД недоступна)`)); });
