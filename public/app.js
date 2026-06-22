@@ -122,7 +122,15 @@ async function updateQuote() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ insuranceType: state.type, details: state.details }),
     });
-    const data = await res.json();
+    
+    // БЕЗПЕЧНЕ ЗЧИТУВАННЯ: Спочатку текст, щоб уникнути Unexpected end of JSON
+    const text = await res.text();
+    if (!res.ok) {
+      const errData = text ? JSON.parse(text) : {};
+      throw new Error(errData.error || `Помилка сервера (${res.status})`);
+    }
+
+    const data = JSON.parse(text);
     if (data.price != null) {
       state.price = data.price;
       document.getElementById('priceVal').textContent = fmt(data.price);
@@ -130,7 +138,8 @@ async function updateQuote() {
       document.getElementById('meterFill').style.width = pct + '%';
       document.getElementById('meterLabel').textContent = 'Попередній розрахунок для обраних параметрів';
     }
-  } catch {
+  } catch (err) {
+    console.error("Помилка розрахунку премії:", err);
     document.getElementById('meterLabel').textContent = 'Не вдалося розрахувати — перевірте з’єднання';
   }
 }
@@ -188,8 +197,15 @@ async function submitApplication() {
         details: state.details,
       }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Помилка');
+    
+    // БЕЗПЕЧНЕ ЗЧИТУВАННЯ: Парсимо лише за наявності тексту відповіді
+    const text = await res.text();
+    if (!res.ok) {
+      const errData = text ? JSON.parse(text) : {};
+      throw new Error(errData.error || `Не вдалося надіслати заявку (Статус ${res.status})`);
+    }
+
+    const data = JSON.parse(text);
     document.querySelectorAll('.form-panel, .steps').forEach((el) => el.style.display = 'none');
     document.getElementById('successBox').classList.add('show');
     document.getElementById('reqNum').textContent = data.requestNumber;
@@ -209,8 +225,16 @@ async function checkStatus() {
   box.textContent = 'Шукаємо…';
   try {
     const res = await fetch('/api/applications/status/' + encodeURIComponent(num));
-    const data = await res.json();
-    if (!res.ok) { box.innerHTML = `<span style="color:var(--danger)">${data.error}</span>`; return; }
+    
+    // БЕЗПЕЧНЕ ЗЧИТУВАННЯ: Усуває Unexpected end of JSON, якщо статус 404/500
+    const text = await res.text();
+    if (!res.ok) {
+      const errData = text ? JSON.parse(text) : {};
+      box.innerHTML = `<span style="color:var(--danger)">${errData.error || 'Заявку не знайдено або помилка сервера'}</span>`;
+      return;
+    }
+
+    const data = JSON.parse(text);
     const price = data.final_price || data.estimated_price;
     box.innerHTML = `
       <div style="background:#fcfdfd;border:1px solid var(--line);border-radius:10px;padding:18px">
@@ -221,8 +245,9 @@ async function checkStatus() {
         <div style="color:var(--muted);font-size:.92rem">Вид: ${TYPE_META[data.insurance_type]?.label || data.insurance_type}</div>
         <div style="color:var(--muted);font-size:.92rem">Вартість: ${price ? fmt(price) + ' грн' : '—'}</div>
       </div>`;
-  } catch {
-    box.innerHTML = '<span style="color:var(--danger)">Помилка з’єднання</span>';
+  } catch (err) {
+    console.error("Помилка перевірки статусу:", err);
+    box.innerHTML = '<span style="color:var(--danger)">Помилка з’єднання або сервера</span>';
   }
 }
 
