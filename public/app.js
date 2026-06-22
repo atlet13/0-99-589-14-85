@@ -1,4 +1,3 @@
-// ───────── Конфіг типів та полів ─────────
 const TYPE_META = {
   osago:    { label: 'ОСЦПВ (авто)',     from: 1200, desc: 'Обов’язкове авто­страхування цивільної відповідальності.', icon: 'car' },
   kasko:    { label: 'КАСКО',            from: 9000, desc: 'Повний захист автомобіля від ДТП, угону та пошкоджень.', icon: 'car' },
@@ -16,7 +15,6 @@ const ICONS = {
   heart: '<path d="M12 20s-7-4.6-7-9.5A3.5 3.5 0 0 1 12 7a3.5 3.5 0 0 1 7 3.5C19 15.4 12 20 12 20Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
 };
 
-// Поля, специфічні для кожного типу
 const TYPE_FIELDS = {
   osago: [
     { name: 'enginePower', label: 'Об’єм двигуна', type: 'select', options: [['1','до 1600 см³'],['2','1601–2000 см³'],['3','2001–3000 см³'],['4','понад 3000 см³']] },
@@ -48,7 +46,6 @@ const TYPE_FIELDS = {
 
 const state = { type: 'osago', step: 1, details: {} };
 
-// ───────── Рендер сітки типів ─────────
 function svgIcon(name) { return `<svg viewBox="0 0 24 24" fill="none">${ICONS[name]}</svg>`; }
 const fmt = (n) => Number(n).toLocaleString('uk-UA');
 
@@ -105,13 +102,11 @@ function renderTypeFields() {
       debouncedQuote();
     });
   });
-  // ініціалізувати значення select-ів
   document.querySelectorAll('#typeFields select[data-field]').forEach((el) => {
     state.details[el.dataset.field] = el.value;
   });
 }
 
-// ───────── Розрахунок премії ─────────
 let quoteTimer;
 function debouncedQuote() { clearTimeout(quoteTimer); quoteTimer = setTimeout(updateQuote, 350); }
 
@@ -122,14 +117,11 @@ async function updateQuote() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ insuranceType: state.type, details: state.details }),
     });
-    
-    // БЕЗПЕЧНЕ ЗЧИТУВАННЯ: Спочатку текст, щоб уникнути Unexpected end of JSON
     const text = await res.text();
     if (!res.ok) {
       const errData = text ? JSON.parse(text) : {};
-      throw new Error(errData.error || `Помилка сервера (${res.status})`);
+      throw new Error(errData.error || `Помилка структури (${res.status})`);
     }
-
     const data = JSON.parse(text);
     if (data.price != null) {
       state.price = data.price;
@@ -138,13 +130,11 @@ async function updateQuote() {
       document.getElementById('meterFill').style.width = pct + '%';
       document.getElementById('meterLabel').textContent = 'Попередній розрахунок для обраних параметрів';
     }
-  } catch (err) {
-    console.error("Помилка розрахунку премії:", err);
+  } catch {
     document.getElementById('meterLabel').textContent = 'Не вдалося розрахувати — перевірте з’єднання';
   }
 }
 
-// ───────── Кроки форми ─────────
 function goStep(step) {
   state.step = step;
   document.querySelectorAll('.form-panel').forEach((p) => p.classList.toggle('active', +p.dataset.panel === step));
@@ -165,7 +155,7 @@ function renderReview() {
     <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:var(--muted)">ПІБ</span><b>${val('fullName') || '—'}</b></div>
     <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:var(--muted)">Телефон</span><b>${val('phone') || '—'}</b></div>
     ${detailsHtml}
-    <div style="display:flex;justify-content:space-between;padding:8px 0 0;margin-top:8px;border-top:1px solid var(--line)"><span style="color:var(--muted)">Орієнтовна вартість</span><b style="color:var(--teal-dark)">${state.price ? fmt(state.price) + ' грн' : '—'}</b></div>`;
+    <div style="display:flex;justify-content:space-between;padding:8px 0 0;margin-top:8px;border-top:1px solid var(--line)"><span style="color:var(--muted)">До сплати</span><b style="color:var(--teal-dark)">${state.price ? fmt(state.price) + ' грн' : '—'}</b></div>`;
 }
 
 const val = (id) => (document.getElementById(id)?.value || '').trim();
@@ -173,69 +163,82 @@ const val = (id) => (document.getElementById(id)?.value || '').trim();
 function validateStep2() {
   if (val('fullName').length < 3) { alert('Вкажіть ПІБ'); return false; }
   if (!/^[+0-9\s\-()]{7,20}$/.test(val('phone'))) { alert('Вкажіть коректний телефон'); return false; }
-  const email = val('email');
-  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { alert('Некоректний email'); return false; }
   return true;
 }
 
-// ───────── Відправлення заявки ─────────
+// Подача заявки разом із безпечною імітацією еквайрингу
 async function submitApplication() {
   if (!document.getElementById('consent').checked) { alert('Потрібна згода на обробку даних'); return; }
   const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.textContent = 'Надсилаємо…';
-  try {
-    const res = await fetch('/api/applications', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        insuranceType: state.type,
-        fullName: val('fullName'),
-        phone: val('phone'),
-        email: val('email') || null,
-        city: val('city') || null,
-        birthDate: val('birthDate') || null,
-        details: state.details,
-      }),
-    });
+  
+  // Імітація платіжного шлюзу (LiqPay / Monobank)
+  btn.disabled = true; btn.textContent = 'З’єднання з банком…';
+  
+  setTimeout(async () => {
+    btn.textContent = 'Проведення транзакції…';
     
-    // БЕЗПЕЧНЕ ЗЧИТУВАННЯ: Парсимо лише за наявності тексту відповіді
-    const text = await res.text();
-    if (!res.ok) {
-      const errData = text ? JSON.parse(text) : {};
-      throw new Error(errData.error || `Не вдалося надіслати заявку (Статус ${res.status})`);
-    }
+    try {
+      const res = await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          insuranceType: state.type,
+          fullName: val('fullName'),
+          phone: val('phone'),
+          email: val('email') || null,
+          city: val('city') || null,
+          birthDate: val('birthDate') || null,
+          details: state.details,
+        }),
+      });
+      
+      const text = await res.text();
+      if (!res.ok) {
+        const errData = text ? JSON.parse(text) : {};
+        throw new Error(errData.error || `Помилка процесингу (${res.status})`);
+      }
 
-    const data = JSON.parse(text);
-    document.querySelectorAll('.form-panel, .steps').forEach((el) => el.style.display = 'none');
-    document.getElementById('successBox').classList.add('show');
-    document.getElementById('reqNum').textContent = data.requestNumber;
-  } catch (err) {
-    alert(err.message);
-    btn.disabled = false; btn.textContent = 'Надіслати заявку';
-  }
+      const data = JSON.parse(text);
+      document.querySelectorAll('.form-panel, .steps').forEach((el) => el.style.display = 'none');
+      document.getElementById('successBox').classList.add('show');
+      document.getElementById('reqNum').textContent = data.requestNumber;
+    } catch (err) {
+      alert(err.message);
+      btn.disabled = false; btn.textContent = 'Оплатити поліс онлайн';
+    }
+  }, 1800); // Гарна реалістична затримка банку
 }
 
-// ───────── Перевірка статусу ─────────
 const STATUS_LABEL = { new: 'Нова', review: 'На розгляді', approved: 'Підтверджено', issued: 'Поліс видано', rejected: 'Відхилено' };
 
 async function checkStatus() {
   const num = document.getElementById('statusInput').value.trim();
   const box = document.getElementById('checkerResult');
   if (!num) { box.innerHTML = '<span style="color:var(--danger)">Введіть номер заявки</span>'; return; }
-  box.textContent = 'Шукаємо…';
+  box.textContent = 'Опитування бази даних…';
   try {
     const res = await fetch('/api/applications/status/' + encodeURIComponent(num));
-    
-    // БЕЗПЕЧНЕ ЗЧИТУВАННЯ: Усуває Unexpected end of JSON, якщо статус 404/500
     const text = await res.text();
     if (!res.ok) {
       const errData = text ? JSON.parse(text) : {};
-      box.innerHTML = `<span style="color:var(--danger)">${errData.error || 'Заявку не знайдено або помилка сервера'}</span>`;
+      box.innerHTML = `<span style="color:var(--danger)">${errData.error || 'Заявку не знайдено'}</span>`;
       return;
     }
 
     const data = JSON.parse(text);
     const price = data.final_price || data.estimated_price;
+    
+    // Якщо статус 'issued', додаємо кнопку для скачування документа
+    let downloadBtnHtml = '';
+    if (data.status === 'issued') {
+      downloadBtnHtml = `
+        <div style="margin-top:14px; text-align:center;">
+          <a href="/api/applications/download/${data.request_number}" class="btn btn-amber" style="padding:8px 16px; font-size:.88rem; width:100%">
+            📥 Завантажити електронний поліс (.TXT)
+          </a>
+        </div>`;
+    }
+
     box.innerHTML = `
       <div style="background:#fcfdfd;border:1px solid var(--line);border-radius:10px;padding:18px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -243,15 +246,14 @@ async function checkStatus() {
           <span class="badge ${data.status}">${STATUS_LABEL[data.status] || data.status}</span>
         </div>
         <div style="color:var(--muted);font-size:.92rem">Вид: ${TYPE_META[data.insurance_type]?.label || data.insurance_type}</div>
-        <div style="color:var(--muted);font-size:.92rem">Вартість: ${price ? fmt(price) + ' грн' : '—'}</div>
+        <div style="color:var(--muted);font-size:.92rem">Сума оплати: ${price ? fmt(price) + ' грн' : '—'}</div>
+        ${downloadBtnHtml}
       </div>`;
-  } catch (err) {
-    console.error("Помилка перевірки статусу:", err);
-    box.innerHTML = '<span style="color:var(--danger)">Помилка з’єднання або сервера</span>';
+  } catch {
+    box.innerHTML = '<span style="color:var(--danger)">Помилка з’єднання</span>';
   }
 }
 
-// ───────── Ініціалізація ─────────
 document.addEventListener('DOMContentLoaded', () => {
   renderTypesGrid();
   renderTypePicker();
