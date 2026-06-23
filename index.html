@@ -15,6 +15,12 @@
   #tiles img{position:absolute;width:256px;height:256px;display:block;image-rendering:auto;pointer-events:none}
   #me{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#4aa3ff;
     border:2px solid #fff;box-shadow:0 0 0 6px rgba(74,163,255,.25);display:none;pointer-events:none;z-index:5}
+  #route{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
+  #routeLine{fill:none;stroke:#FF6B57;stroke-width:5;stroke-linejoin:round;stroke-linecap:round;
+    opacity:.92;filter:drop-shadow(0 0 3px rgba(255,107,87,.5))}
+  #dest{position:absolute;width:16px;height:16px;margin:-16px 0 0 -8px;background:#FF6B57;
+    border:2px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+    box-shadow:0 2px 6px rgba(0,0,0,.5);display:none;pointer-events:none;z-index:5}
   .attrib{position:absolute;right:0;bottom:0;z-index:6;font-size:10px;color:var(--muted);
     background:rgba(14,17,22,.7);padding:2px 6px;border-top-left-radius:6px}
   .attrib a{color:var(--muted)}
@@ -45,11 +51,56 @@
   .bar{height:8px;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
   .bar>i{display:block;height:100%;width:0;background:var(--signal);transition:width .15s}
   .lbl{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
+
+  .searchbar{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 46px);z-index:11}
+  .srow{display:flex;gap:8px}
+  .srow input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--text);
+    padding:12px 14px;border-radius:12px;font-size:15px;outline:none;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);-webkit-user-select:text;user-select:text}
+  .srow input::placeholder{color:var(--muted)}
+  .srow button{flex:0 0 auto;width:48px;border:1px solid var(--line);background:var(--panel);color:var(--text);
+    border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.35)}
+  .results{margin-top:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    overflow:hidden;display:none;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+  .results.show{display:block}
+  .results .r{padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer;font-size:14px;line-height:1.35}
+  .results .r:last-child{border-bottom:none}
+  .results .r:active{background:var(--line)}
+  .results .r b{display:block;font-weight:600}
+  .results .r span{color:var(--muted);font-size:12px}
+  .results .r.msg{color:var(--muted);cursor:default}
+
+  .routebar{position:absolute;left:12px;right:12px;bottom:84px;z-index:11;display:none;
+    align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);
+    border-radius:13px;padding:11px 12px;box-shadow:0 6px 20px rgba(0,0,0,.45)}
+  .routebar.show{display:flex}
+  .rb-main{flex:1;min-width:0}
+  .rb-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rb-meta{font-size:12px;color:var(--muted);margin-top:2px}
+  .routebar #rbClear{flex:0 0 auto;width:36px;height:36px;border-radius:10px;border:1px solid var(--line);
+    background:var(--bg);color:var(--text);font-size:16px;cursor:pointer}
+
+  .intro{position:fixed;inset:0;z-index:50;background:rgba(8,10,13,.88);backdrop-filter:blur(3px);
+    display:flex;align-items:center;justify-content:center;padding:24px}
+  .intro.hide{display:none}
+  .introcard{max-width:340px;width:100%;background:var(--panel);border:1px solid var(--line);
+    border-radius:18px;padding:24px;text-align:center}
+  .introbadge{width:54px;height:54px;border-radius:14px;background:var(--signal);color:#1a1200;
+    font-size:26px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .introcard h2{margin:0 0 8px;font-size:20px}
+  .introcard p{margin:0 0 16px;color:var(--muted);font-size:14px;line-height:1.5}
+  .introcard ol{text-align:left;margin:0 0 20px;padding-left:22px;font-size:14px;line-height:1.8}
+  .introcard ol b{color:var(--signal)}
+  .introcard button{width:100%;border:1px solid var(--signal);background:var(--signal);color:#1a1200;
+    padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer}
 </style>
 </head>
 <body>
   <div id="map">
     <div id="tiles"></div>
+    <svg id="route" preserveAspectRatio="none"><path id="routeLine"/></svg>
+    <div id="dest"></div>
     <div id="me"></div>
     <div class="attrib">© <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div>
   </div>
@@ -59,6 +110,24 @@
     <div class="badge" id="bNet"><span class="dot"></span><span>офлайн</span></div>
     <div class="badge" id="bMap"><span class="dot"></span><span>0 плиток</span></div>
   </header>
+
+  <div class="searchbar">
+    <div class="srow">
+      <input id="q" type="search" placeholder="Куди їхати? Адреса…" autocomplete="off" enterkeyhint="search" />
+      <button id="qbtn" title="Знайти">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      </button>
+    </div>
+    <div id="results" class="results"></div>
+  </div>
+
+  <div class="routebar" id="routebar">
+    <div class="rb-main">
+      <div class="rb-name" id="rbName">—</div>
+      <div class="rb-meta" id="rbMeta">—</div>
+    </div>
+    <button id="rbClear" title="Скинути маршрут">✕</button>
+  </div>
 
   <div class="zoom">
     <button id="zin">+</button>
@@ -76,6 +145,19 @@
     </button>
     <div class="prog" id="prog"><div class="bar"><i id="bar"></i></div><div class="lbl" id="plbl">0%</div></div>
   </div>
+
+<div class="intro" id="intro">
+  <div class="introcard">
+    <div class="introbadge">▲</div>
+    <h2>Підготуй мапу до тривоги</h2>
+    <p>Зроби це раз, поки є інтернет. Під час тривоги мережа не потрібна — GPS веде тебе по збереженій мапі.</p>
+    <ol>
+      <li>Знайди свій район на мапі</li>
+      <li>Натисни <b>«Завантажити цей район»</b></li>
+    </ol>
+    <button id="introGo">Зрозуміло</button>
+  </div>
+</div>
 
 <script>
 'use strict';
@@ -116,6 +198,9 @@ let center=saved?{lat:saved.lat,lng:saved.lng}:KYIV;
 let zoom=saved?saved.z:13;
 let W=innerWidth,H=innerHeight;
 const mapEl=document.getElementById('map'),tilesEl=document.getElementById('tiles'),meEl=document.getElementById('me');
+const destEl=document.getElementById('dest'),routeSvg=document.getElementById('route'),routeLineEl=document.getElementById('routeLine');
+let destination=null;   // {lat,lng,name}
+let routeCoords=[];     // [[lat,lng],...]
 
 const urlCache=new Map();      // key -> objectURL
 const tileNodes=new Map();     // key -> img element
@@ -160,6 +245,19 @@ function render(){
   }
   // прибрати зайві
   for(const [key,img] of tileNodes){if(!need.has(key)){img.remove();tileNodes.delete(key);}}
+
+  // маршрут
+  if(routeCoords.length>1){
+    let d='';
+    for(let i=0;i<routeCoords.length;i++){const p=project(routeCoords[i][0],routeCoords[i][1],zoom);
+      d+=(i?'L':'M')+(p.x-originX).toFixed(1)+' '+(p.y-originY).toFixed(1)+' ';}
+    routeLineEl.setAttribute('d',d);
+  }else routeLineEl.setAttribute('d','');
+
+  // точка Б
+  if(destination){const p=project(destination.lat,destination.lng,zoom);
+    destEl.style.left=(p.x-originX)+'px';destEl.style.top=(p.y-originY)+'px';destEl.style.display='block';}
+  else destEl.style.display='none';
 
   // GPS-крапка
   if(mePos){const p=project(mePos.lat,mePos.lng,zoom);
@@ -230,10 +328,12 @@ mapEl.addEventListener('pointercancel',endPointer);
 addEventListener('resize',requestRender);
 
 /* ---------- GPS ---------- */
-let mePos=null;const bGps=document.getElementById('bGps');
+let mePos=null,firstFix=true;const bGps=document.getElementById('bGps');
 if('geolocation' in navigator){
   navigator.geolocation.watchPosition(p=>{
-    mePos={lat:p.coords.latitude,lng:p.coords.longitude};bGps.className='badge on';render();
+    mePos={lat:p.coords.latitude,lng:p.coords.longitude};bGps.className='badge on';
+    if(firstFix&&!saved){firstFix=false;center={...mePos};if(zoom<15)zoom=15;clearTiles();}
+    render();
   },()=>{bGps.className='badge warn';},{enableHighAccuracy:true,maximumAge:3000,timeout:15000});
 }
 document.getElementById('locate').onclick=()=>{if(mePos){center={...mePos};if(zoom<16)zoom=16;clearTiles();render();}};
@@ -281,7 +381,108 @@ dlBtn.onclick=async()=>{
   dlBtn.disabled=false;dlText.textContent='Завантажити цей район';refreshCount();render();
 };
 
+/* ---------- маршрут А→Б ---------- */
+const GEOCODE='https://nominatim.openstreetmap.org/search';
+const ROUTER='https://router.project-osrm.org/route/v1/driving/';
+const qEl=document.getElementById('q'),qbtn=document.getElementById('qbtn'),resultsEl=document.getElementById('results');
+const routebar=document.getElementById('routebar'),rbName=document.getElementById('rbName'),rbMeta=document.getElementById('rbMeta');
+
+function fmtKm(m){return m<1000?Math.round(m)+' м':(m/1000).toFixed(m<10000?1:0)+' км';}
+function fmtMin(s){const m=Math.round(s/60);return m<60?m+' хв':Math.floor(m/60)+' год '+(m%60)+' хв';}
+
+function showResults(html){resultsEl.innerHTML=html;resultsEl.classList.add('show');}
+function hideResults(){resultsEl.classList.remove('show');}
+
+async function geocode(q){
+  if(!navigator.onLine){showResults('<div class="r msg">Немає інтернету. Адресу можна знайти лише зі зв\u0027язком — зроби це наперед.</div>');return;}
+  showResults('<div class="r msg">Шукаю…</div>');
+  const c=project(center.lat,center.lng,zoom);
+  const tl=unproject(c.x-W,c.y-H,zoom), br=unproject(c.x+W,c.y+H,zoom); // ширша рамка для пріоритету
+  const u=GEOCODE+'?format=json&limit=5&accept-language=uk&countrycodes=ua'+
+    '&viewbox='+[tl.lng,tl.lat,br.lng,br.lat].join(',')+
+    '&q='+encodeURIComponent(q);
+  try{
+    const r=await fetch(u,{headers:{'Accept':'application/json'}});
+    const arr=await r.json();
+    if(!arr.length){showResults('<div class="r msg">Нічого не знайдено. Спробуй уточнити адресу.</div>');return;}
+    showResults(arr.map((it,i)=>{
+      const parts=(it.display_name||'').split(',');
+      const head=parts.slice(0,2).join(',').trim();
+      const tail=parts.slice(2,5).join(',').trim();
+      return `<div class="r" data-i="${i}"><b>${esc(head)}</b><span>${esc(tail)}</span></div>`;
+    }).join(''));
+    resultsEl.querySelectorAll('.r[data-i]').forEach(el=>{
+      el.onclick=()=>{const it=arr[+el.dataset.i];
+        pickDestination({lat:+it.lat,lng:+it.lon,name:(it.display_name||'').split(',').slice(0,2).join(',').trim()});};
+    });
+  }catch{showResults('<div class="r msg">Помилка пошуку. Перевір зв\u0027язок.</div>');}
+}
+function esc(t){return (t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+async function pickDestination(d){
+  destination=d;hideResults();qEl.value=d.name;qEl.blur();
+  await buildRoute();
+}
+
+async function buildRoute(){
+  if(!destination)return;
+  const A=mePos||center;                     // старт: GPS, інакше центр мапи
+  routebar.classList.add('show');
+  rbName.textContent=destination.name;
+  if(!navigator.onLine){
+    rbMeta.textContent='Немає мережі — показую пряму лінію до точки';
+    routeCoords=[[A.lat,A.lng],[destination.lat,destination.lng]];
+    fitBounds(routeCoords);saveRoute();render();return;
+  }
+  rbMeta.textContent='Будую маршрут…';
+  try{
+    const u=ROUTER+`${A.lng},${A.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`;
+    const r=await fetch(u);const j=await r.json();
+    if(j.code!=='Ok'||!j.routes?.length)throw 0;
+    const rt=j.routes[0];
+    routeCoords=rt.geometry.coordinates.map(c=>[c[1],c[0]]); // [lng,lat]→[lat,lng]
+    rbMeta.textContent=`${fmtKm(rt.distance)} • ${fmtMin(rt.duration)} • збережено офлайн`;
+    fitBounds(routeCoords);saveRoute();render();
+  }catch{
+    rbMeta.textContent='Не вдалось — показую пряму лінію';
+    routeCoords=[[A.lat,A.lng],[destination.lat,destination.lng]];
+    fitBounds(routeCoords);saveRoute();render();
+  }
+}
+
+function fitBounds(pts){
+  let minLa=90,maxLa=-90,minLn=180,maxLn=-180;
+  for(const [la,ln] of pts){minLa=Math.min(minLa,la);maxLa=Math.max(maxLa,la);minLn=Math.min(minLn,ln);maxLn=Math.max(maxLn,ln);}
+  center={lat:(minLa+maxLa)/2,lng:(minLn+maxLn)/2};
+  for(let z=MAXZ;z>=MINZ;z--){
+    const a=project(minLa,minLn,z),b=project(maxLa,maxLn,z);
+    if(Math.abs(b.x-a.x)<W*0.82 && Math.abs(b.y-a.y)<H*0.62){zoom=z;break;}
+  }
+  clearTiles();
+}
+
+function saveRoute(){localStorage.setItem('route',JSON.stringify({destination,routeCoords}));}
+function loadRoute(){
+  const s=JSON.parse(localStorage.getItem('route')||'null');
+  if(s&&s.destination){destination=s.destination;routeCoords=s.routeCoords||[];
+    routebar.classList.add('show');rbName.textContent=destination.name;
+    rbMeta.textContent=routeCoords.length>1?'Збережений маршрут — працює офлайн':'Точку збережено';}
+}
+document.getElementById('rbClear').onclick=()=>{
+  destination=null;routeCoords=[];routebar.classList.remove('show');
+  qEl.value='';localStorage.removeItem('route');render();
+};
+qbtn.onclick=()=>{const v=qEl.value.trim();if(v)geocode(v);};
+qEl.addEventListener('keydown',e=>{if(e.key==='Enter'){const v=qEl.value.trim();if(v)geocode(v);}});
+mapEl.addEventListener('pointerdown',hideResults);
+
+/* ---------- перший запуск ---------- */
+const intro=document.getElementById('intro');
+if(localStorage.getItem('intro_done'))intro.classList.add('hide');
+document.getElementById('introGo').onclick=()=>{intro.classList.add('hide');localStorage.setItem('intro_done','1');};
+
 /* ---------- старт ---------- */
+loadRoute();
 render();refreshCount();
 </script>
 </body>
