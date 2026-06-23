@@ -10,10 +10,20 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
   html,body{height:100%;margin:0}
   body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Roboto,sans-serif;overflow:hidden}
-  #map{position:absolute;inset:0;background:#0b0e12;touch-action:none;cursor:grab}
+  #map{position:absolute;inset:0;background:#0b0e12;touch-action:none;cursor:grab;
+    perspective:900px;perspective-origin:50% 32%}
   #map.drag{cursor:grabbing}
+  #scene{position:absolute;inset:0;transform-origin:50% 58%;transition:transform .35s ease;
+    transform-style:preserve-3d}
+  #map.d3 #scene{transform:rotateX(54deg)}
+  .sky{position:absolute;left:0;right:0;top:0;height:46%;z-index:2;pointer-events:none;display:none;
+    background:linear-gradient(to bottom,#0b0e12 8%,rgba(11,14,18,.85) 38%,rgba(11,14,18,0))}
+  #map.d3 .sky{display:block}
   #map::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
     box-shadow:inset 0 0 120px 20px rgba(0,0,0,.45)}  /* м'яка віньєтка */
+  #cams .cam{position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:7px;
+    background:#11151b;border:1.5px solid #FF5A4D;display:flex;align-items:center;justify-content:center;
+    font-size:12px;pointer-events:none;z-index:4;box-shadow:0 1px 5px rgba(0,0,0,.55)}
   #tiles img{position:absolute;width:256px;height:256px;display:block;pointer-events:none;
     transition:opacity .35s ease}
 
@@ -61,6 +71,8 @@
   .zoom button,.locate{width:48px;height:48px;border-radius:12px;background:var(--panel);
     border:1px solid var(--line);color:var(--text);font-size:24px;display:flex;align-items:center;
     justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+  #tilt{font-size:14px;font-weight:800;letter-spacing:.02em}
+  #map.d3 #tilt{background:var(--signal);color:#1a1200;border-color:var(--signal)}
   .locate{position:absolute;right:12px;bottom:150px;z-index:10;border-radius:50%;font-size:0}
   .layers{position:absolute;right:12px;bottom:210px;z-index:10;width:48px;height:48px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
@@ -158,10 +170,14 @@
 </head>
 <body>
   <div id="map">
-    <div id="tiles"></div>
-    <svg id="route" preserveAspectRatio="none"><path id="routeCasing"/><path id="routeLine"/><path id="routeFlow"/></svg>
-    <div id="dest"></div>
-    <div id="me"><div id="meArrow"></div></div>
+    <div id="scene">
+      <div id="tiles"></div>
+      <svg id="route" preserveAspectRatio="none"><path id="routeCasing"/><path id="routeLine"/><path id="routeFlow"/></svg>
+      <div id="cams"></div>
+      <div id="dest"></div>
+      <div id="me"><div id="meArrow"></div></div>
+    </div>
+    <div class="sky" id="sky"></div>
     <div class="attrib">© <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div>
   </div>
 
@@ -192,6 +208,7 @@
   <div class="zoom">
     <button id="zin">+</button>
     <button id="zout">−</button>
+    <button id="tilt" title="3D / 2D">3D</button>
   </div>
   <div class="locate" id="locate" title="До мене">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8EDF2" stroke-width="2">
@@ -344,6 +361,10 @@ const destEl=document.getElementById('dest'),routeSvg=document.getElementById('r
 const routeCasingEl=document.getElementById('routeCasing'),routeFlowEl=document.getElementById('routeFlow');
 let destination=null;   // {lat,lng,name}
 let routeCoords=[];     // [[lat,lng],...]
+let cameras=[];         // [{lat,lng}]
+let camEls=[];
+let d3=localStorage.getItem('d3')==='1';
+const sceneEl=document.getElementById('scene'),camsEl=document.getElementById('cams');
 
 const urlCache=new Map();      // key -> objectURL
 const tileNodes=new Map();     // key -> img element
@@ -372,8 +393,9 @@ function render(){
   const c=project(center.lat,center.lng,zoom);
   const originX=c.x-W/2, originY=c.y-H/2;
   const max=2**zoom;
-  const x0=Math.floor(originX/TILE), x1=Math.floor((originX+W)/TILE);
-  const y0=Math.floor(originY/TILE), y1=Math.floor((originY+H)/TILE);
+  const mTop=d3?H*1.4:0, mSide=d3?W*0.4:0, mBot=d3?H*0.15:0;
+  const x0=Math.floor((originX-mSide)/TILE), x1=Math.floor((originX+W+mSide)/TILE);
+  const y0=Math.floor((originY-mTop)/TILE), y1=Math.floor((originY+H+mBot)/TILE);
 
   const need=new Set();
   for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++){
@@ -404,6 +426,11 @@ function render(){
     destEl.style.left=(p.x-originX)+'px';destEl.style.top=(p.y-originY)+'px';destEl.style.display='block';}
   else destEl.style.display='none';
 
+  // камери швидкості
+  for(let i=0;i<cameras.length;i++){const el=camEls[i];if(!el)continue;
+    const p=project(cameras[i].lat,cameras[i].lng,zoom);
+    el.style.left=(p.x-originX)+'px';el.style.top=(p.y-originY)+'px';}
+
   // GPS-крапка + стрілка напрямку
   if(mePos){const p=project(mePos.lat,mePos.lng,zoom);
     meEl.style.left=(p.x-originX)+'px';meEl.style.top=(p.y-originY)+'px';meEl.style.display='block';
@@ -431,6 +458,9 @@ function zoomTo(nz,sx,sy){
 }
 document.getElementById('zin').onclick=()=>zoomTo(zoom+1,W/2,H/2);
 document.getElementById('zout').onclick=()=>zoomTo(zoom-1,W/2,H/2);
+const tiltBtn=document.getElementById('tilt');
+function applyTilt(){mapEl.classList.toggle('d3',d3);tiltBtn.textContent=d3?'2D':'3D';clearTiles();render();}
+tiltBtn.onclick=()=>{d3=!d3;localStorage.setItem('d3',d3?'1':'0');applyTilt();};
 mapEl.addEventListener('wheel',e=>{e.preventDefault();zoomTo(zoom+(e.deltaY<0?1:-1),e.clientX,e.clientY);},{passive:false});
 let lastTap=0;
 mapEl.addEventListener('dblclick',e=>zoomTo(zoom+1,e.clientX,e.clientY));
@@ -482,7 +512,7 @@ if('geolocation' in navigator){
   navigator.geolocation.watchPosition(p=>{
     mePos={lat:p.coords.latitude,lng:p.coords.longitude};bGps.className='badge on';
     if(firstFix&&!saved){firstFix=false;center={...mePos};if(zoom<15)zoom=15;clearTiles();}
-    render();navVoice();
+    render();navVoice();checkCameras();
   },()=>{bGps.className='badge warn';},{enableHighAccuracy:true,maximumAge:3000,timeout:15000});
 }
 document.getElementById('locate').onclick=()=>{if(mePos){center={...mePos};if(zoom<16)zoom=16;clearTiles();render();}};
@@ -539,7 +569,9 @@ dlBtn.onclick=async()=>{
     }catch{}
     done++;const p=Math.round(done/total*100);bar.style.width=p+'%';plbl.textContent=`${p}% (${done}/${total})`;}}
   await Promise.all(Array.from({length:CONC},worker));
-  plbl.textContent=`Готово ✓ ${total} плиток збережено офлайн`;
+  plbl.textContent=`Готово ✓ ${total} плиток. Шукаю камери…`;
+  const cams=await fetchCameras();
+  plbl.textContent=`Готово ✓ ${total} плиток`+(cams?`, +${cams} камер`:'')+` збережено офлайн`;
   dlBtn.disabled=false;dlText.textContent='Завантажити цей район';refreshCount();render();
 };
 
@@ -599,10 +631,10 @@ async function buildRoute(){
   }
   rbMeta.textContent='Будую маршрут…';
   try{
-    const u=ROUTER+`${A.lng},${A.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`;
+    const u=ROUTER+`${A.lng},${A.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson&alternatives=3`;
     const r=await fetch(u);const j=await r.json();
     if(j.code!=='Ok'||!j.routes?.length)throw 0;
-    const rt=j.routes[0];
+    const rt=j.routes.reduce((a,b)=>b.distance<a.distance?b:a); // найкоротший за відстанню
     routeCoords=rt.geometry.coordinates.map(c=>[c[1],c[0]]); // [lng,lat]→[lat,lng]
     rbMeta.textContent=`${fmtKm(rt.distance)} • ${fmtMin(rt.duration)} • збережено офлайн`;
     fitBounds(routeCoords);saveRoute();render();
@@ -649,6 +681,18 @@ function speak(t){
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);
     u.lang='uk-UA';u.rate=1;u.pitch=1;speechSynthesis.speak(u);}catch{}
 }
+function plUA(n,one,few,many){const a=n%10,b=n%100;
+  if(a===1&&b!==11)return one;
+  if(a>=2&&a<=4&&(b<10||b>=20))return few;
+  return many;}
+function speakDist(m){
+  if(m>=1000){let km=Math.floor(m/1000),rem=Math.round((m%1000)/100)*100;
+    if(rem>=1000){km++;rem=0;}
+    let s=km+' '+plUA(km,'кілометр','кілометри','кілометрів');
+    if(rem>0)s+=' '+rem+' метрів';
+    return s;}
+  const n=Math.max(10,Math.round(m/10)*10);
+  return n+' '+plUA(n,'метр','метри','метрів');}
 function navVoice(force){
   if(!voiceOn||!(routeCoords.length>1||destination))return;
   const rem=remainingMeters();
@@ -657,7 +701,7 @@ function navVoice(force){
   if(force||lastCue==null||Math.abs(lastCue-rem)>=300){
     lastCue=rem;const hd=headingToFollow();
     const dir=hd!=null?('Прямуйте на '+compassUA(hd)+'. '):'';
-    speak(dir+'Залишилось '+fmtKm(rem).replace('.',',')+'.');
+    speak(dir+'Залишилось '+speakDist(rem)+'.');
   }
 }
 
@@ -728,13 +772,41 @@ if(SR){asstMic.onclick=()=>{try{const r=new SR();r.lang='uk-UA';r.interimResults
   r.onresult=e=>{asstInput.value=e.results[0][0].transcript;sendAsst();};r.start();}catch{}};}
 else asstMic.style.display='none';
 
+/* ---------- камери швидкості ---------- */
+function buildCamEls(){camsEl.innerHTML='';camEls=cameras.map(()=>{const d=document.createElement('div');
+  d.className='cam';d.textContent='📷';camsEl.appendChild(d);return d;});}
+function saveCameras(){localStorage.setItem('cams',JSON.stringify(cameras.map(c=>({lat:c.lat,lng:c.lng}))));}
+function loadCameras(){try{cameras=JSON.parse(localStorage.getItem('cams')||'[]');}catch{cameras=[];}buildCamEls();}
+async function fetchCameras(){
+  if(!navigator.onLine)return 0;
+  const c=project(center.lat,center.lng,zoom);
+  const tl=unproject(c.x-W/2,c.y-H/2,zoom),br=unproject(c.x+W/2,c.y+H/2,zoom);
+  const s=Math.min(tl.lat,br.lat),n=Math.max(tl.lat,br.lat),w=Math.min(tl.lng,br.lng),e=Math.max(tl.lng,br.lng);
+  const ql=`[out:json][timeout:25];node["highway"="speed_camera"](${s},${w},${n},${e});out;`;
+  try{
+    const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(ql)});
+    const j=await r.json();
+    const seen=new Set(cameras.map(c=>c.lat.toFixed(5)+','+c.lng.toFixed(5)));
+    let added=0;
+    for(const el of (j.elements||[])){if(el.lat==null)continue;const k=el.lat.toFixed(5)+','+el.lon.toFixed(5);
+      if(!seen.has(k)){cameras.push({lat:el.lat,lng:el.lon});seen.add(k);added++;}}
+    saveCameras();buildCamEls();render();return added;
+  }catch{return 0;}
+}
+function checkCameras(){
+  if(!voiceOn||!mePos||!cameras.length)return;
+  for(const c of cameras){const d=distM(mePos.lat,mePos.lng,c.lat,c.lng);
+    if(d<300&&!c._warned){c._warned=true;speak('Увага, попереду камера контролю швидкості.');break;}
+    if(d>500)c._warned=false;}
+}
+
 /* ---------- перший запуск ---------- */
 const intro=document.getElementById('intro');
 if(localStorage.getItem('intro_done'))intro.classList.add('hide');
 document.getElementById('introGo').onclick=()=>{intro.classList.add('hide');localStorage.setItem('intro_done','1');};
 
 /* ---------- старт ---------- */
-loadRoute();
+loadRoute();loadCameras();applyTilt();
 render();refreshCount();
 </script>
 </body>
