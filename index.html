@@ -127,6 +127,32 @@
   .rb-meta{font-size:12px;color:var(--muted);margin-top:2px}
   .routebar #rbClear{flex:0 0 auto;width:36px;height:36px;border-radius:10px;border:1px solid var(--line);
     background:var(--bg);color:var(--text);font-size:16px;cursor:pointer}
+  #rbGo{flex:0 0 auto;background:var(--signal);color:#1a1200;border:1px solid var(--signal);
+    border-radius:10px;padding:9px 15px;font-weight:800;font-size:14px;cursor:pointer}
+
+  .navtop{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px);z-index:13;display:none;
+    background:#2a2f37;border:1px solid #3a414b;border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.55)}
+  .navtop.show{display:block}
+  .nt-main{display:flex;align-items:center;gap:14px}
+  #ntIcon{flex:0 0 auto;width:40px;height:40px;transition:transform .25s ease}
+  .nt-text{flex:1;min-width:0}
+  #ntPrimary{font-size:19px;font-weight:700;line-height:1.18}
+  #ntDist{font-size:13px;color:var(--signal);margin-top:3px;font-weight:700}
+  .nt-then{margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,.12);
+    font-size:13px;color:var(--muted);display:none}
+  .nt-then.show{display:block}
+
+  .navbot{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 12px);z-index:13;
+    display:none;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);
+    border-radius:16px;padding:12px 12px;box-shadow:0 -6px 20px rgba(0,0,0,.45)}
+  .navbot.show{display:flex}
+  .nb-cell{flex:1;text-align:center;display:flex;flex-direction:column}
+  .nb-cell b{font-size:20px;font-weight:800;line-height:1}
+  .nb-cell span{font-size:11px;color:var(--muted);margin-top:3px}
+  #nbStop{flex:0 0 auto;background:#FF5A4D;color:#fff;border:none;border-radius:11px;
+    padding:11px 14px;font-weight:700;font-size:13px;cursor:pointer}
+
+  body.navon .searchbar,body.navon .routebar,body.navon .dock,body.navon .zoom,body.navon #asstBtn{display:none!important}
 
   .sheetbg{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);display:none;align-items:flex-end}
   .sheetbg.show{display:flex}
@@ -202,7 +228,23 @@
       <div class="rb-name" id="rbName">—</div>
       <div class="rb-meta" id="rbMeta">—</div>
     </div>
+    <button id="rbGo" title="Почати навігацію">Поїхали</button>
     <button id="rbClear" title="Скинути маршрут">✕</button>
+  </div>
+
+  <div class="navtop" id="navTop">
+    <div class="nt-main">
+      <svg id="ntIcon" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V5M12 5l-6 6M12 5l6 6"/></svg>
+      <div class="nt-text"><div id="ntPrimary">—</div><div id="ntDist">—</div></div>
+    </div>
+    <div class="nt-then" id="ntThen"></div>
+  </div>
+
+  <div class="navbot" id="navBot">
+    <div class="nb-cell"><b id="nbEta">—</b><span>прибуття</span></div>
+    <div class="nb-cell"><b id="nbMin">—</b><span>хв</span></div>
+    <div class="nb-cell"><b id="nbKm">—</b><span>км</span></div>
+    <button id="nbStop">Завершити</button>
   </div>
 
   <div class="zoom">
@@ -364,6 +406,7 @@ let routeCoords=[];     // [[lat,lng],...]
 let cameras=[];         // [{lat,lng}]
 let camEls=[];
 let d3=localStorage.getItem('d3')==='1';
+let steps=[], totalDist=0, totalDur=0, navMode=false, stepIndex=0;
 const sceneEl=document.getElementById('scene'),camsEl=document.getElementById('cams');
 
 const urlCache=new Map();      // key -> objectURL
@@ -393,7 +436,7 @@ function render(){
   const c=project(center.lat,center.lng,zoom);
   const originX=c.x-W/2, originY=c.y-H/2;
   const max=2**zoom;
-  const mTop=d3?H*1.4:0, mSide=d3?W*0.4:0, mBot=d3?H*0.15:0;
+  const mTop=d3?H*1.4:(navMode?H*0.7:0), mSide=(d3||navMode)?W*0.7:0, mBot=(d3||navMode)?H*0.5:0;
   const x0=Math.floor((originX-mSide)/TILE), x1=Math.floor((originX+W+mSide)/TILE);
   const y0=Math.floor((originY-mTop)/TILE), y1=Math.floor((originY+H+mBot)/TILE);
 
@@ -432,12 +475,17 @@ function render(){
     el.style.left=(p.x-originX)+'px';el.style.top=(p.y-originY)+'px';}
 
   // GPS-крапка + стрілка напрямку
+  const hd=headingToFollow();
   if(mePos){const p=project(mePos.lat,mePos.lng,zoom);
     meEl.style.left=(p.x-originX)+'px';meEl.style.top=(p.y-originY)+'px';meEl.style.display='block';
-    const hd=headingToFollow();
     if(hd!=null){meEl.style.transform='rotate('+hd.toFixed(1)+'deg)';meArrowEl.style.display='block';}
     else{meEl.style.transform='none';meArrowEl.style.display='none';}
   }
+
+  // нахил (3D) + поворот за курсом (навігація)
+  const pitch=d3?54:0;
+  const rot=(navMode&&hd!=null)?-hd:0;
+  sceneEl.style.transform=`rotateX(${pitch}deg) rotate(${rot.toFixed(1)}deg)`;
 
   localStorage.setItem('view',JSON.stringify({lat:center.lat,lng:center.lng,z:zoom}));
 }
@@ -512,7 +560,8 @@ if('geolocation' in navigator){
   navigator.geolocation.watchPosition(p=>{
     mePos={lat:p.coords.latitude,lng:p.coords.longitude};bGps.className='badge on';
     if(firstFix&&!saved){firstFix=false;center={...mePos};if(zoom<15)zoom=15;clearTiles();}
-    render();navVoice();checkCameras();
+    if(navMode){updateNav();checkCameras();}
+    else{render();navVoice();checkCameras();}
   },()=>{bGps.className='badge warn';},{enableHighAccuracy:true,maximumAge:3000,timeout:15000});
 }
 document.getElementById('locate').onclick=()=>{if(mePos){center={...mePos};if(zoom<16)zoom=16;clearTiles();render();}};
@@ -580,6 +629,84 @@ const GEOCODE='https://nominatim.openstreetmap.org/search';
 const ROUTER='https://router.project-osrm.org/route/v1/driving/';
 const qEl=document.getElementById('q'),qbtn=document.getElementById('qbtn'),resultsEl=document.getElementById('results');
 const routebar=document.getElementById('routebar'),rbName=document.getElementById('rbName'),rbMeta=document.getElementById('rbMeta');
+const rbGo=document.getElementById('rbGo'),navTop=document.getElementById('navTop'),navBot=document.getElementById('navBot'),
+      ntIcon=document.getElementById('ntIcon'),ntPrimary=document.getElementById('ntPrimary'),ntDist=document.getElementById('ntDist'),
+      ntThen=document.getElementById('ntThen'),nbEta=document.getElementById('nbEta'),nbMin=document.getElementById('nbMin'),
+      nbKm=document.getElementById('nbKm'),nbStop=document.getElementById('nbStop');
+
+function dirWord(m){return {'left':'ліворуч','right':'праворуч','slight left':'трохи ліворуч','slight right':'трохи праворуч',
+  'sharp left':'різко ліворуч','sharp right':'різко праворуч'}[m]||'';}
+function uaManeuver(s){
+  const t=s.maneuver?.type||'',m=s.maneuver?.modifier||'',name=s.name||'';
+  const on=name?(' на '+name):'',along=name?(' по '+name):'';
+  if(t==='depart')return 'Рушайте'+along;
+  if(t==='arrive')return 'Прибуття до місця';
+  if(t==='turn')return 'Поверніть '+dirWord(m)+on;
+  if(t==='end of road')return 'У кінці дороги — '+dirWord(m)+on;
+  if(t==='fork')return 'На розвилці тримайтесь '+(m.includes('left')?'ліворуч':'праворуч')+on;
+  if(t==='merge')return 'Перестройтесь'+(m?(' '+dirWord(m)):'')+on;
+  if(t==='on ramp')return 'Виїзд на трасу'+on;
+  if(t==='off ramp')return "З'їзд"+on;
+  if(t==='roundabout'||t==='rotary')return 'На кільці'+(s.maneuver.exit?(', '+s.maneuver.exit+'-й з\u0027їзд'):'')+on;
+  if(t==='uturn')return 'Розверніться'+along;
+  if(t==='new name'||t==='continue')return 'Продовжуйте'+along;
+  return name?('Прямуйте по '+name):'Прямуйте далі';
+}
+function maneuverDeg(t,m){
+  if(t==='uturn')return 180;
+  if(t==='arrive'||t==='depart')return 0;
+  return {'left':-90,'right':90,'slight left':-40,'slight right':40,'sharp left':-135,'sharp right':135,'straight':0}[m]||0;
+}
+function fmtShort(m){return m<1000?Math.round(m/10)*10+' м':(m/1000).toFixed(1).replace('.',',')+' км';}
+
+function startNav(){
+  if(!destination)return;
+  navMode=true;arrived=false;stepIndex=0;speakUnlocked=true;
+  steps.forEach(s=>{s._prep=false;s._do=false;});
+  document.body.classList.add('navon');navTop.classList.add('show');navBot.classList.add('show');
+  zoom=Math.max(zoom,17);
+  if(steps.length)speak(steps[0].text);
+  if(mePos)updateNav();else render();
+}
+function stopNav(){
+  navMode=false;document.body.classList.remove('navon');
+  navTop.classList.remove('show');navBot.classList.remove('show');
+  try{speechSynthesis.cancel();}catch{}
+  render();
+}
+function navZoom(d){            // ближче маневр → більший зум
+  if(d<70)return 18;
+  if(d<200)return 17;
+  if(d<600)return 16;
+  return 15;
+}
+function updateNav(){
+  if(mePos)center={...mePos};
+  let aimDist;
+  if(steps.length){
+    while(stepIndex<steps.length-1&&distM(mePos.lat,mePos.lng,steps[stepIndex].lat,steps[stepIndex].lng)<25)stepIndex++;
+    const st=steps[stepIndex];aimDist=distM(mePos.lat,mePos.lng,st.lat,st.lng);
+    ntIcon.style.transform='rotate('+st.deg+'deg)';
+    ntPrimary.textContent=st.text;ntDist.textContent='через '+fmtShort(aimDist);
+    const then=steps[stepIndex+1];
+    if(then){ntThen.textContent='Потім: '+then.text;ntThen.classList.add('show');}else ntThen.classList.remove('show');
+    if(voiceOn&&aimDist<=250&&!st._prep){st._prep=true;speak('Через '+speakDist(aimDist)+'. '+st.text);}
+    if(voiceOn&&aimDist<=40&&!st._do){st._do=true;speak(st.text);}
+  }else{ntPrimary.textContent='Прямуйте до місця';ntDist.textContent='';ntThen.classList.remove('show');}
+  const rem=remainingMeters();
+  if(aimDist==null)aimDist=rem;
+  const remDur=totalDist?totalDur*(rem/totalDist):rem/11;
+  const eta=new Date(Date.now()+remDur*1000);
+  nbEta.textContent=String(eta.getHours()).padStart(2,'0')+':'+String(eta.getMinutes()).padStart(2,'0');
+  nbMin.textContent=Math.max(1,Math.round(remDur/60));
+  nbKm.textContent=(rem/1000).toFixed(rem<10000?1:0);
+  if(rem<=35&&!arrived){arrived=true;if(voiceOn)speak('Ви прибули до пункту призначення.');}
+  const dz=navZoom(aimDist);                 // автозум на поворотах
+  if(dz!==zoom){zoom=dz;clearTiles();}
+  render();
+}
+rbGo.onclick=startNav;
+nbStop.onclick=stopNav;
 
 function fmtKm(m){return m<1000?Math.round(m)+' м':(m/1000).toFixed(m<10000?1:0)+' км';}
 function fmtMin(s){const m=Math.round(s/60);return m<60?m+' хв':Math.floor(m/60)+' год '+(m%60)+' хв';}
@@ -627,20 +754,27 @@ async function buildRoute(){
   if(!navigator.onLine){
     rbMeta.textContent='Немає мережі — показую пряму лінію до точки';
     routeCoords=[[A.lat,A.lng],[destination.lat,destination.lng]];
+    steps=[];totalDist=0;totalDur=0;rbGo.style.display='';
     fitBounds(routeCoords);saveRoute();render();return;
   }
   rbMeta.textContent='Будую маршрут…';
   try{
-    const u=ROUTER+`${A.lng},${A.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson&alternatives=3`;
+    const u=ROUTER+`${A.lng},${A.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson&alternatives=3&steps=true`;
     const r=await fetch(u);const j=await r.json();
     if(j.code!=='Ok'||!j.routes?.length)throw 0;
     const rt=j.routes.reduce((a,b)=>b.distance<a.distance?b:a); // найкоротший за відстанню
     routeCoords=rt.geometry.coordinates.map(c=>[c[1],c[0]]); // [lng,lat]→[lat,lng]
+    const raw=rt.legs?.[0]?.steps||[];
+    steps=raw.map(s=>({lat:s.maneuver.location[1],lng:s.maneuver.location[0],
+      text:uaManeuver(s),deg:maneuverDeg(s.maneuver.type,s.maneuver.modifier),dist:s.distance}));
+    totalDist=rt.distance;totalDur=rt.duration;
     rbMeta.textContent=`${fmtKm(rt.distance)} • ${fmtMin(rt.duration)} • збережено офлайн`;
+    rbGo.style.display='';
     fitBounds(routeCoords);saveRoute();render();
   }catch{
     rbMeta.textContent='Не вдалось — показую пряму лінію';
     routeCoords=[[A.lat,A.lng],[destination.lat,destination.lng]];
+    steps=[];totalDist=0;totalDur=0;rbGo.style.display='';
     fitBounds(routeCoords);saveRoute();render();
   }
 }
@@ -656,15 +790,17 @@ function fitBounds(pts){
   clearTiles();
 }
 
-function saveRoute(){localStorage.setItem('route',JSON.stringify({destination,routeCoords}));}
+function saveRoute(){localStorage.setItem('route',JSON.stringify({destination,routeCoords,steps,totalDist,totalDur}));}
 function loadRoute(){
   const s=JSON.parse(localStorage.getItem('route')||'null');
   if(s&&s.destination){destination=s.destination;routeCoords=s.routeCoords||[];
-    routebar.classList.add('show');rbName.textContent=destination.name;
+    steps=s.steps||[];totalDist=s.totalDist||0;totalDur=s.totalDur||0;
+    routebar.classList.add('show');rbName.textContent=destination.name;rbGo.style.display='';
     rbMeta.textContent=routeCoords.length>1?'Збережений маршрут — працює офлайн':'Точку збережено';}
 }
 document.getElementById('rbClear').onclick=()=>{
-  destination=null;routeCoords=[];routebar.classList.remove('show');
+  if(navMode)stopNav();
+  destination=null;routeCoords=[];steps=[];totalDist=0;totalDur=0;routebar.classList.remove('show');
   qEl.value='';localStorage.removeItem('route');render();
 };
 qbtn.onclick=()=>{const v=qEl.value.trim();if(v)geocode(v);};
