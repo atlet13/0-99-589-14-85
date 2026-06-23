@@ -12,17 +12,36 @@
   body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Roboto,sans-serif;overflow:hidden}
   #map{position:absolute;inset:0;background:#0b0e12;touch-action:none;cursor:grab}
   #map.drag{cursor:grabbing}
-  #tiles img{position:absolute;width:256px;height:256px;display:block;image-rendering:auto;pointer-events:none}
-  #me{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#4aa3ff;
-    border:2px solid #fff;box-shadow:0 0 0 6px rgba(74,163,255,.25);display:none;pointer-events:none;z-index:5}
+  #map::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
+    box-shadow:inset 0 0 120px 20px rgba(0,0,0,.45)}  /* м'яка віньєтка */
+  #tiles img{position:absolute;width:256px;height:256px;display:block;pointer-events:none;
+    transition:opacity .35s ease}
+
+  #me{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;
+    background:#3B9DFF;border:2.5px solid #fff;display:none;pointer-events:none;z-index:5;
+    box-shadow:0 0 12px rgba(59,157,255,.9),0 1px 3px rgba(0,0,0,.6)}
+  #me::before{content:"";position:absolute;left:50%;top:50%;width:16px;height:16px;
+    margin:-8px 0 0 -8px;border-radius:50%;background:rgba(59,157,255,.45);
+    animation:pulse 2s ease-out infinite}
+  @keyframes pulse{0%{transform:scale(1);opacity:.7}70%{transform:scale(3.4);opacity:0}100%{opacity:0}}
+
   #route{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
-  #routeLine{fill:none;stroke:#FF6B57;stroke-width:5;stroke-linejoin:round;stroke-linecap:round;
-    opacity:.92;filter:drop-shadow(0 0 3px rgba(255,107,87,.5))}
-  #dest{position:absolute;width:16px;height:16px;margin:-16px 0 0 -8px;background:#FF6B57;
-    border:2px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
-    box-shadow:0 2px 6px rgba(0,0,0,.5);display:none;pointer-events:none;z-index:5}
+  #routeCasing{fill:none;stroke:rgba(7,9,12,.85);stroke-width:10;stroke-linejoin:round;stroke-linecap:round}
+  #routeLine{fill:none;stroke:#FFB000;stroke-width:5.5;stroke-linejoin:round;stroke-linecap:round;
+    filter:drop-shadow(0 0 6px rgba(255,176,0,.6))}
+  #routeFlow{fill:none;stroke:#FFE08A;stroke-width:2.5;stroke-linecap:round;
+    stroke-dasharray:2 22;animation:flow 1.1s linear infinite}
+  @keyframes flow{to{stroke-dashoffset:-24}}
+
+  #dest{position:absolute;width:20px;height:20px;margin:-22px 0 0 -10px;display:none;
+    pointer-events:none;z-index:5;filter:drop-shadow(0 3px 5px rgba(0,0,0,.55))}
+  #dest::before{content:"";position:absolute;inset:0;background:#FF5A4D;
+    border:2.5px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg)}
+  #dest::after{content:"";position:absolute;left:50%;top:42%;width:6px;height:6px;margin:-3px 0 0 -3px;
+    background:#fff;border-radius:50%}
+
   .attrib{position:absolute;right:0;bottom:0;z-index:6;font-size:10px;color:var(--muted);
-    background:rgba(14,17,22,.7);padding:2px 6px;border-top-left-radius:6px}
+    background:rgba(14,17,22,.55);backdrop-filter:blur(4px);padding:3px 7px;border-top-left-radius:7px}
   .attrib a{color:var(--muted)}
 
   header{position:absolute;top:0;left:0;right:0;z-index:10;
@@ -39,6 +58,18 @@
     border:1px solid var(--line);color:var(--text);font-size:24px;display:flex;align-items:center;
     justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4)}
   .locate{position:absolute;right:12px;bottom:150px;z-index:10;border-radius:50%;font-size:0}
+  .layers{position:absolute;right:12px;bottom:210px;z-index:10;width:48px;height:48px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+  .stylepop{position:absolute;right:70px;bottom:200px;z-index:12;display:none;flex-direction:column;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+    box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  .stylepop.show{display:flex}
+  .stylepop button{border:none;background:none;color:var(--text);padding:11px 18px;font-size:14px;
+    text-align:left;cursor:pointer;border-bottom:1px solid var(--line);white-space:nowrap}
+  .stylepop button:last-child{border-bottom:none}
+  .stylepop button.active{color:var(--signal);font-weight:700}
+  .stylepop button:active{background:var(--line)}
 
   .dock{position:absolute;left:0;right:0;bottom:0;z-index:10;
     padding:14px 12px calc(env(safe-area-inset-bottom) + 14px);
@@ -99,7 +130,7 @@
 <body>
   <div id="map">
     <div id="tiles"></div>
-    <svg id="route" preserveAspectRatio="none"><path id="routeLine"/></svg>
+    <svg id="route" preserveAspectRatio="none"><path id="routeCasing"/><path id="routeLine"/><path id="routeFlow"/></svg>
     <div id="dest"></div>
     <div id="me"></div>
     <div class="attrib">© <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div>
@@ -137,6 +168,15 @@
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8EDF2" stroke-width="2">
       <circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
   </div>
+  <div class="layers" id="layersBtn" title="Стиль карти">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8EDF2" stroke-width="2">
+      <path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M2 13l10 5 10-5M2 18l10 5 10-5" opacity=".55"/></svg>
+  </div>
+  <div class="stylepop" id="stylePop">
+    <button data-s="dark">Темна</button>
+    <button data-s="light">Світла</button>
+    <button data-s="sat">Супутник</button>
+  </div>
 
   <div class="dock">
     <button class="dl" id="dl">
@@ -162,7 +202,17 @@
 <script>
 'use strict';
 const TILE=256, MINZ=3, MAXZ=19;
-const TILE_URL=(z,x,y)=>`https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+function sub(x,y){return ['a','b','c','d'][(((x+y)%4)+4)%4];}
+const STYLES={
+  dark:{name:'Темна',  attr:'© OpenStreetMap, © CARTO',
+        url:(z,x,y)=>`https://${sub(x,y)}.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}@2x.png`},
+  light:{name:'Світла',attr:'© OpenStreetMap, © CARTO',
+        url:(z,x,y)=>`https://${sub(x,y)}.basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}@2x.png`},
+  sat:{name:'Супутник',attr:'© Esri, Maxar, Earthstar Geographics',
+        url:(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`}
+};
+let style=localStorage.getItem('style'); if(!STYLES[style])style='dark';
+const TILE_URL=(z,x,y)=>STYLES[style].url(z,x,y);
 const DL_ZOOMS=[14,15,16,17], DL_CAP=2500, KYIV={lat:50.4501,lng:30.5234};
 
 /* ---------- проекція Web Mercator ---------- */
@@ -199,12 +249,13 @@ let zoom=saved?saved.z:13;
 let W=innerWidth,H=innerHeight;
 const mapEl=document.getElementById('map'),tilesEl=document.getElementById('tiles'),meEl=document.getElementById('me');
 const destEl=document.getElementById('dest'),routeSvg=document.getElementById('route'),routeLineEl=document.getElementById('routeLine');
+const routeCasingEl=document.getElementById('routeCasing'),routeFlowEl=document.getElementById('routeFlow');
 let destination=null;   // {lat,lng,name}
 let routeCoords=[];     // [[lat,lng],...]
 
 const urlCache=new Map();      // key -> objectURL
 const tileNodes=new Map();     // key -> img element
-function tileKey(z,x,y){return z+'/'+x+'/'+y;}
+function tileKey(z,x,y){return style+'/'+z+'/'+x+'/'+y;}
 
 function loadTileSrc(img,z,x,y){
   const key=tileKey(z,x,y);
@@ -239,7 +290,9 @@ function render(){
     const key=tileKey(zoom,wx,y);
     need.add(key);
     let img=tileNodes.get(key);
-    if(!img){img=new Image();img.decoding='async';tileNodes.set(key,img);tilesEl.appendChild(img);loadTileSrc(img,zoom,wx,y);}
+    if(!img){img=new Image();img.decoding='async';img.style.opacity='0';
+      img.onload=()=>{img.style.opacity='1';};
+      tileNodes.set(key,img);tilesEl.appendChild(img);loadTileSrc(img,zoom,wx,y);}
     img.style.left=(x*TILE-originX)+'px';
     img.style.top =(y*TILE-originY)+'px';
   }
@@ -251,8 +304,8 @@ function render(){
     let d='';
     for(let i=0;i<routeCoords.length;i++){const p=project(routeCoords[i][0],routeCoords[i][1],zoom);
       d+=(i?'L':'M')+(p.x-originX).toFixed(1)+' '+(p.y-originY).toFixed(1)+' ';}
-    routeLineEl.setAttribute('d',d);
-  }else routeLineEl.setAttribute('d','');
+    routeCasingEl.setAttribute('d',d);routeLineEl.setAttribute('d',d);routeFlowEl.setAttribute('d',d);
+  }else{routeCasingEl.setAttribute('d','');routeLineEl.setAttribute('d','');routeFlowEl.setAttribute('d','');}
 
   // точка Б
   if(destination){const p=project(destination.lat,destination.lng,zoom);
@@ -337,6 +390,19 @@ if('geolocation' in navigator){
   },()=>{bGps.className='badge warn';},{enableHighAccuracy:true,maximumAge:3000,timeout:15000});
 }
 document.getElementById('locate').onclick=()=>{if(mePos){center={...mePos};if(zoom<16)zoom=16;clearTiles();render();}};
+
+/* ---------- стиль карти ---------- */
+const attribEl=document.querySelector('.attrib');
+function setAttrib(){attribEl.textContent=STYLES[style].attr;}
+const layersBtn=document.getElementById('layersBtn'),stylePop=document.getElementById('stylePop');
+function markActive(){stylePop.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.s===style));}
+layersBtn.onclick=e=>{e.stopPropagation();stylePop.classList.toggle('show');markActive();};
+stylePop.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  style=b.dataset.s;localStorage.setItem('style',style);
+  stylePop.classList.remove('show');markActive();setAttrib();clearTiles();render();refreshCount();
+});
+document.addEventListener('click',e=>{if(!stylePop.contains(e.target)&&e.target!==layersBtn)stylePop.classList.remove('show');});
+setAttrib();
 
 /* ---------- мережа + лічильник ---------- */
 const bNet=document.getElementById('bNet'),bMap=document.getElementById('bMap');
