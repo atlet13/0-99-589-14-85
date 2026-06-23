@@ -77,6 +77,9 @@
   .layers{position:absolute;right:12px;bottom:210px;z-index:10;width:48px;height:48px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
     cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+  .compass{position:absolute;right:12px;bottom:330px;z-index:10;width:48px;height:48px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);display:none;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4)}
   .stylepop{position:absolute;right:70px;bottom:200px;z-index:12;display:none;flex-direction:column;
     background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;
     box-shadow:0 8px 24px rgba(0,0,0,.5)}
@@ -256,6 +259,11 @@
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8EDF2" stroke-width="2">
       <circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
   </div>
+  <div class="compass" id="compass" title="Повернути на північ">
+    <svg id="compassNeedle" viewBox="0 0 24 24" width="26" height="26">
+      <path d="M12 3 L8.5 13 L12 11 L15.5 13 Z" fill="#FF5A4D"/>
+      <path d="M12 21 L8.5 13 L12 15 L15.5 13 Z" fill="#8B97A4"/></svg>
+  </div>
   <div class="layers" id="layersBtn" title="Стиль карти">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8EDF2" stroke-width="2">
       <path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M2 13l10 5 10-5M2 18l10 5 10-5" opacity=".55"/></svg>
@@ -396,6 +404,9 @@ async function countTiles(){const d=await idb();return new Promise((res)=>{
 const saved=JSON.parse(localStorage.getItem('view')||'null');
 let center=saved?{lat:saved.lat,lng:saved.lng}:KYIV;
 let zoom=saved?saved.z:13;
+let bearing=saved&&saved.b?saved.b:0;   // ручний поворот карти, градуси
+let displayRot=0;                        // фактичний кут сцени (для жестів)
+let compassBtn=null,compassNeedle=null;
 let W=innerWidth,H=innerHeight;
 const mapEl=document.getElementById('map'),tilesEl=document.getElementById('tiles'),meEl=document.getElementById('me');
 const meArrowEl=document.getElementById('meArrow');
@@ -436,7 +447,8 @@ function render(){
   const c=project(center.lat,center.lng,zoom);
   const originX=c.x-W/2, originY=c.y-H/2;
   const max=2**zoom;
-  const mTop=d3?H*1.4:(navMode?H*0.7:0), mSide=(d3||navMode)?W*0.7:0, mBot=(d3||navMode)?H*0.5:0;
+  const rotated=navMode||Math.abs(bearing)>0.5;
+  const mTop=d3?H*1.4:(rotated?H*0.7:0), mSide=(d3||rotated)?W*0.7:0, mBot=(d3||rotated)?H*0.5:0;
   const x0=Math.floor((originX-mSide)/TILE), x1=Math.floor((originX+W+mSide)/TILE);
   const y0=Math.floor((originY-mTop)/TILE), y1=Math.floor((originY+H+mBot)/TILE);
 
@@ -482,12 +494,15 @@ function render(){
     else{meEl.style.transform='none';meArrowEl.style.display='none';}
   }
 
-  // нахил (3D) + поворот за курсом (навігація)
+  // нахил (3D) + поворот (курс у навігації або ручний)
   const pitch=d3?54:0;
-  const rot=(navMode&&hd!=null)?-hd:0;
+  const rot=(navMode&&hd!=null)?-hd:bearing;
+  displayRot=rot;
   sceneEl.style.transform=`rotateX(${pitch}deg) rotate(${rot.toFixed(1)}deg)`;
+  if(compassBtn)compassBtn.style.display=(!navMode&&Math.abs(((bearing%360)+360)%360)>0.5)?'flex':'none';
+  if(compassNeedle)compassNeedle.style.transform='rotate('+(-rot)+'deg)';
 
-  localStorage.setItem('view',JSON.stringify({lat:center.lat,lng:center.lng,z:zoom}));
+  localStorage.setItem('view',JSON.stringify({lat:center.lat,lng:center.lng,z:zoom,b:bearing}));
 }
 function clearTiles(){for(const [,img] of tileNodes)img.remove();tileNodes.clear();}
 
@@ -495,13 +510,12 @@ function clearTiles(){for(const [,img] of tileNodes)img.remove();tileNodes.clear
 function zoomTo(nz,sx,sy){
   nz=Math.max(MINZ,Math.min(MAXZ,Math.round(nz)));
   if(nz===zoom)return;
+  const off=screenToWorld(sx-W/2,sy-H/2);       // зміщення з урахуванням повороту
   const c=project(center.lat,center.lng,zoom);
-  const wx=c.x-W/2+sx, wy=c.y-H/2+sy;          // світові px точки під пальцем
-  const ll=unproject(wx,wy,zoom);
+  const ll=unproject(c.x+off.x,c.y+off.y,zoom);  // точка під пальцем
   zoom=nz;
-  const np=project(ll.lat,ll.lng,zoom);         // та сама точка на новому зумі
-  const ncx=np.x-(sx-W/2), ncy=np.y-(sy-H/2);   // новий центр у px
-  center=unproject(ncx,ncy,zoom);
+  const np=project(ll.lat,ll.lng,zoom);
+  center=unproject(np.x-off.x,np.y-off.y,zoom);  // тримаємо її на місці
   clearTiles();render();
 }
 document.getElementById('zin').onclick=()=>zoomTo(zoom+1,W/2,H/2);
@@ -515,27 +529,36 @@ mapEl.addEventListener('dblclick',e=>zoomTo(zoom+1,e.clientX,e.clientY));
 
 /* ---------- панорамування + пінч ---------- */
 const pts=new Map();let panStart=null,pinchStart=null;
+function screenToWorld(dx,dy){           // екранне зміщення → світове з урахуванням повороту
+  const a=-displayRot*Math.PI/180;
+  return {x:dx*Math.cos(a)-dy*Math.sin(a), y:dx*Math.sin(a)+dy*Math.cos(a)};
+}
 mapEl.addEventListener('pointerdown',e=>{mapEl.setPointerCapture(e.pointerId);
   pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(pts.size===1){mapEl.classList.add('drag');
     panStart={x:e.clientX,y:e.clientY,c:project(center.lat,center.lng,zoom)};
     const now=Date.now();if(now-lastTap<300){zoomTo(zoom+1,e.clientX,e.clientY);}lastTap=now;
   }else if(pts.size===2){const a=[...pts.values()];
-    pinchStart={dist:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),zoom,
+    pinchStart={dist:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),zoom,bearing,
+      ang:Math.atan2(a[1].y-a[0].y,a[1].x-a[0].x),
       mid:{x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2},c:project(center.lat,center.lng,zoom)};panStart=null;}
 });
 mapEl.addEventListener('pointermove',e=>{
   if(!pts.has(e.pointerId))return;
   pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(pts.size===1&&panStart){
-    const dx=e.clientX-panStart.x, dy=e.clientY-panStart.y;
-    center=unproject(panStart.c.x-dx,panStart.c.y-dy,zoom);
+    const wd=screenToWorld(e.clientX-panStart.x, e.clientY-panStart.y);
+    center=unproject(panStart.c.x-wd.x,panStart.c.y-wd.y,zoom);
     requestRender();
   }else if(pts.size===2&&pinchStart){
     const a=[...pts.values()];
+    if(!navMode){                         // крутимо карту (не під час навігації за курсом)
+      const ang=Math.atan2(a[1].y-a[0].y,a[1].x-a[0].x);
+      bearing=pinchStart.bearing+(ang-pinchStart.ang)*180/Math.PI;
+    }
     const mid={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2};
-    const dx=mid.x-pinchStart.mid.x, dy=mid.y-pinchStart.mid.y;
-    center=unproject(pinchStart.c.x-dx,pinchStart.c.y-dy,zoom);
+    const wd=screenToWorld(mid.x-pinchStart.mid.x, mid.y-pinchStart.mid.y);
+    center=unproject(pinchStart.c.x-wd.x,pinchStart.c.y-wd.y,zoom);
     requestRender();
   }
 });
@@ -544,7 +567,7 @@ function endPointer(e){
     const a=[...pts.values()];
     const dist=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);
     const nz=pinchStart.zoom+Math.log2(dist/pinchStart.dist);
-    zoomTo(nz,pinchStart.mid.x,pinchStart.mid.y);
+    zoomTo(nz,W/2,H/2);
   }
   pts.delete(e.pointerId);
   if(pts.size<2)pinchStart=null;
@@ -553,6 +576,9 @@ function endPointer(e){
 mapEl.addEventListener('pointerup',endPointer);
 mapEl.addEventListener('pointercancel',endPointer);
 addEventListener('resize',requestRender);
+compassBtn=document.getElementById('compass');
+compassNeedle=document.getElementById('compassNeedle');
+compassBtn.onclick=()=>{bearing=0;render();};
 
 /* ---------- GPS ---------- */
 let mePos=null,firstFix=true;const bGps=document.getElementById('bGps');
