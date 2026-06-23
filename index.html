@@ -116,6 +116,31 @@
   .routebar #rbClear{flex:0 0 auto;width:36px;height:36px;border-radius:10px;border:1px solid var(--line);
     background:var(--bg);color:var(--text);font-size:16px;cursor:pointer}
 
+  .sheetbg{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);display:none;align-items:flex-end}
+  .sheetbg.show{display:flex}
+  .asst{width:100%;background:var(--panel);border-top:1px solid var(--line);
+    border-top-left-radius:18px;border-top-right-radius:18px;
+    padding:16px 14px calc(env(safe-area-inset-bottom) + 14px);max-height:82vh;display:flex;flex-direction:column}
+  .ah{display:flex;align-items:center;margin-bottom:12px}
+  .ah b{font-size:17px;flex:1}
+  .ah button{width:32px;height:32px;border:none;background:none;color:var(--muted);font-size:16px;cursor:pointer}
+  .toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg);
+    border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:12px;cursor:pointer}
+  .toggle input{width:20px;height:20px;accent-color:var(--signal)}
+  .msgs{flex:1;overflow:auto;min-height:50px;max-height:42vh;margin-bottom:10px;
+    display:flex;flex-direction:column;gap:8px}
+  .msg{padding:10px 12px;border-radius:13px;font-size:14px;line-height:1.45;max-width:86%;white-space:pre-wrap}
+  .msg.u{align-self:flex-end;background:var(--signal);color:#1a1200;border-bottom-right-radius:4px}
+  .msg.a{align-self:flex-start;background:var(--bg);border:1px solid var(--line);border-bottom-left-radius:4px}
+  .ain{display:flex;gap:8px}
+  .ain input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--text);
+    padding:12px;border-radius:11px;font-size:15px;-webkit-user-select:text;user-select:text}
+  .ain button{flex:0 0 auto;width:46px;border:1px solid var(--line);background:#1C232C;color:var(--text);
+    border-radius:11px;font-size:15px;cursor:pointer}
+  .ain #asstSend{background:var(--signal);color:#1a1200;border-color:var(--signal);font-weight:700}
+  .afoot{font-size:11px;color:var(--muted);margin-top:9px;text-align:center;line-height:1.4}
+  .afoot a{color:var(--signal);cursor:pointer;text-decoration:underline}
+
   .intro{position:fixed;inset:0;z-index:50;background:rgba(8,10,13,.88);backdrop-filter:blur(3px);
     display:flex;align-items:center;justify-content:center;padding:24px}
   .intro.hide{display:none}
@@ -180,6 +205,24 @@
     <button data-s="dark">Темна</button>
     <button data-s="light">Світла</button>
     <button data-s="sat">Супутник</button>
+  </div>
+  <div class="layers" id="asstBtn" style="bottom:270px" title="Помічник">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8EDF2" stroke-width="2">
+      <rect x="3" y="8" width="18" height="12" rx="3"/><path d="M12 8V4M8 14h.01M16 14h.01"/></svg>
+  </div>
+
+  <div class="sheetbg" id="asstBg">
+    <div class="asst">
+      <div class="ah"><b>Помічник</b><button id="asstClose">✕</button></div>
+      <label class="toggle"><span>🔊 Озвучувати маршрут</span><input type="checkbox" id="voiceChk" /></label>
+      <div class="msgs" id="asstMsgs"></div>
+      <div class="ain">
+        <input id="asstInput" type="text" placeholder="Спитати помічника…" autocomplete="off" />
+        <button id="asstMic" title="Говорити">🎤</button>
+        <button id="asstSend" title="Надіслати">➤</button>
+      </div>
+      <div class="afoot" id="asstFoot"></div>
+    </div>
   </div>
 
   <div class="dock">
@@ -253,6 +296,26 @@ function headingToFollow(){
   }
   if(destination)return bearingDeg(mePos.lat,mePos.lng,destination.lat,destination.lng);
   return null;
+}
+function distM(la1,ln1,la2,ln2){const R=6371000,r=Math.PI/180;
+  const dLa=(la2-la1)*r,dLn=(ln2-ln1)*r;
+  const x=Math.sin(dLa/2)**2+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dLn/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));}
+function compassUA(d){return ['північ','північний схід','схід','південний схід',
+  'південь','південний захід','захід','північний захід'][Math.round(d/45)%8];}
+function remainingMeters(){
+  if(!mePos)return 0;
+  if(routeCoords.length>1){
+    const z=zoom,me=project(mePos.lat,mePos.lng,z);
+    let bi=0,bd=Infinity;
+    for(let i=0;i<routeCoords.length;i++){const p=project(routeCoords[i][0],routeCoords[i][1],z);
+      const d=(p.x-me.x)**2+(p.y-me.y)**2;if(d<bd){bd=d;bi=i;}}
+    let m=distM(mePos.lat,mePos.lng,routeCoords[bi][0],routeCoords[bi][1]);
+    for(let i=bi+1;i<routeCoords.length;i++)m+=distM(routeCoords[i-1][0],routeCoords[i-1][1],routeCoords[i][0],routeCoords[i][1]);
+    return m;
+  }
+  if(destination)return distM(mePos.lat,mePos.lng,destination.lat,destination.lng);
+  return 0;
 }
 
 /* ---------- IndexedDB для плиток ---------- */
@@ -419,7 +482,7 @@ if('geolocation' in navigator){
   navigator.geolocation.watchPosition(p=>{
     mePos={lat:p.coords.latitude,lng:p.coords.longitude};bGps.className='badge on';
     if(firstFix&&!saved){firstFix=false;center={...mePos};if(zoom<15)zoom=15;clearTiles();}
-    render();
+    render();navVoice();
   },()=>{bGps.className='badge warn';},{enableHighAccuracy:true,maximumAge:3000,timeout:15000});
 }
 document.getElementById('locate').onclick=()=>{if(mePos){center={...mePos};if(zoom<16)zoom=16;clearTiles();render();}};
@@ -521,6 +584,7 @@ function esc(t){return (t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>'
 async function pickDestination(d){
   destination=d;hideResults();qEl.value=d.name;qEl.blur();
   await buildRoute();
+  arrived=false;lastCue=null;navVoice(true);
 }
 
 async function buildRoute(){
@@ -574,6 +638,95 @@ document.getElementById('rbClear').onclick=()=>{
 qbtn.onclick=()=>{const v=qEl.value.trim();if(v)geocode(v);};
 qEl.addEventListener('keydown',e=>{if(e.key==='Enter'){const v=qEl.value.trim();if(v)geocode(v);}});
 mapEl.addEventListener('pointerdown',hideResults);
+
+/* ---------- помічник: голос + Gemini ---------- */
+const GEMINI_MODEL='gemini-2.0-flash';   // за потреби заміни на свою модель
+let voiceOn=localStorage.getItem('voice')!=='0';
+let lastCue=null, arrived=false, speakUnlocked=false;
+
+function speak(t){
+  if(!('speechSynthesis' in window)||!t)return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);
+    u.lang='uk-UA';u.rate=1;u.pitch=1;speechSynthesis.speak(u);}catch{}
+}
+function navVoice(force){
+  if(!voiceOn||!(routeCoords.length>1||destination))return;
+  const rem=remainingMeters();
+  if(rem<=35){if(!arrived){arrived=true;speak('Ви прибули до пункту призначення.');}return;}
+  arrived=false;
+  if(force||lastCue==null||Math.abs(lastCue-rem)>=300){
+    lastCue=rem;const hd=headingToFollow();
+    const dir=hd!=null?('Прямуйте на '+compassUA(hd)+'. '):'';
+    speak(dir+'Залишилось '+fmtKm(rem).replace('.',',')+'.');
+  }
+}
+
+const asstBtn=document.getElementById('asstBtn'),asstBg=document.getElementById('asstBg'),
+      asstMsgs=document.getElementById('asstMsgs'),asstInput=document.getElementById('asstInput'),
+      asstSend=document.getElementById('asstSend'),asstMic=document.getElementById('asstMic'),
+      asstFoot=document.getElementById('asstFoot'),voiceChk=document.getElementById('voiceChk');
+
+voiceChk.checked=voiceOn;
+voiceChk.onchange=()=>{voiceOn=voiceChk.checked;localStorage.setItem('voice',voiceOn?'1':'0');
+  if(voiceOn){speak('Голосові підказки увімкнено.');lastCue=null;navVoice(true);}else speechSynthesis.cancel();};
+
+function footUI(){
+  const has=!!localStorage.getItem('gkey');
+  asstFoot.innerHTML=(has?'Ключ Gemini збережено ✓ • ':'')+
+    `<a id="setKey">${has?'Змінити ключ':'Додати Gemini ключ'}</a> · потрібен інтернет; ключ лише на цьому пристрої`;
+  document.getElementById('setKey').onclick=setKey;
+}
+function setKey(){
+  const k=prompt('Встав свій Gemini API ключ (Google AI Studio). Зберігається лише на цьому пристрої:',
+    localStorage.getItem('gkey')||'');
+  if(k!==null){k.trim()?localStorage.setItem('gkey',k.trim()):localStorage.removeItem('gkey');footUI();}
+}
+function addMsg(role,text){const d=document.createElement('div');d.className='msg '+role;d.textContent=text;
+  asstMsgs.appendChild(d);asstMsgs.scrollTop=asstMsgs.scrollHeight;return d;}
+
+function asstContext(){
+  let c='Ти — голосовий помічник у застосунку офлайн-карти для України під час повітряних тривог. '+
+    'Відповідай українською, спокійно, коротко (1–3 речення), по суті.';
+  if(mePos)c+=` Координати користувача: ${mePos.lat.toFixed(4)}, ${mePos.lng.toFixed(4)}.`;
+  if(destination)c+=` Пункт призначення: ${destination.name}.`;
+  if(routeCoords.length>1&&mePos)c+=` До цілі лишилось ${fmtKm(remainingMeters())}.`;
+  return c;
+}
+async function askGemini(q){
+  const key=localStorage.getItem('gkey');if(!key)return{error:'no-key'};
+  try{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        systemInstruction:{parts:[{text:asstContext()}]},
+        contents:[{role:'user',parts:[{text:q}]}],
+        generationConfig:{maxOutputTokens:400,temperature:0.6}
+      })});
+    const j=await r.json();
+    if(j.error)return{error:j.error.message||'API'};
+    const t=j.candidates?.[0]?.content?.parts?.map(p=>p.text).join('').trim();
+    return t?{text:t}:{error:'порожня відповідь'};
+  }catch(e){return{error:'мережа'};}
+}
+async function sendAsst(){
+  const q=asstInput.value.trim();if(!q)return;
+  speakUnlocked=true;addMsg('u',q);asstInput.value='';
+  if(!navigator.onLine){const m='Немає інтернету — помічник відповідає лише зі зв\u0027язком.';addMsg('a',m);speak(m);return;}
+  if(!localStorage.getItem('gkey')){addMsg('a','Спершу додай Gemini API ключ (внизу).');setKey();return;}
+  const wait=addMsg('a','…');
+  const res=await askGemini(q);wait.remove();
+  if(res.error){addMsg('a',res.error==='no-key'?'Додай Gemini ключ внизу.':'Помилка: '+res.error);return;}
+  addMsg('a',res.text);speak(res.text);
+}
+asstBtn.onclick=()=>{asstBg.classList.add('show');footUI();speakUnlocked=true;};
+document.getElementById('asstClose').onclick=()=>asstBg.classList.remove('show');
+asstBg.addEventListener('click',e=>{if(e.target===asstBg)asstBg.classList.remove('show');});
+asstSend.onclick=sendAsst;
+asstInput.addEventListener('keydown',e=>{if(e.key==='Enter')sendAsst();});
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SR){asstMic.onclick=()=>{try{const r=new SR();r.lang='uk-UA';r.interimResults=false;
+  r.onresult=e=>{asstInput.value=e.results[0][0].transcript;sendAsst();};r.start();}catch{}};}
+else asstMic.style.display='none';
 
 /* ---------- перший запуск ---------- */
 const intro=document.getElementById('intro');
