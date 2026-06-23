@@ -13,8 +13,9 @@
   #map{position:absolute;inset:0;background:#0b0e12;touch-action:none;cursor:grab;
     perspective:900px;perspective-origin:50% 32%}
   #map.drag{cursor:grabbing}
-  #scene{position:absolute;inset:0;transform-origin:50% 58%;transition:transform .35s ease;
+  #scene{position:absolute;inset:0;transform-origin:50% 58%;transition:transform .2s ease;
     transform-style:preserve-3d}
+  #map.navon #scene{transition:none}
   #map.d3 #scene{transform:rotateX(54deg)}
   .sky{position:absolute;left:0;right:0;top:0;height:46%;z-index:2;pointer-events:none;display:none;
     background:linear-gradient(to bottom,#0b0e12 8%,rgba(11,14,18,.85) 38%,rgba(11,14,18,0))}
@@ -40,6 +41,7 @@
   @keyframes pulse{0%{transform:scale(1);opacity:.7}70%{transform:scale(3.4);opacity:0}100%{opacity:0}}
 
   #route{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
+  #trailLine{fill:none;stroke:#4aa3ff;stroke-width:4;stroke-linejoin:round;stroke-linecap:round;opacity:.5}
   #routeCasing{fill:none;stroke:rgba(7,9,12,.85);stroke-width:10;stroke-linejoin:round;stroke-linecap:round}
   #routeLine{fill:none;stroke:#FFB000;stroke-width:5.5;stroke-linejoin:round;stroke-linecap:round;
     filter:drop-shadow(0 0 6px rgba(255,176,0,.6))}
@@ -168,6 +170,10 @@
   .toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg);
     border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:12px;cursor:pointer}
   .toggle input{width:20px;height:20px;accent-color:var(--signal)}
+  .trackrow{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;
+    color:var(--muted);margin-bottom:12px;padding:0 2px}
+  .trackrow button{background:none;border:1px solid var(--line);color:var(--text);border-radius:9px;
+    padding:7px 12px;font-size:13px;cursor:pointer}
   .msgs{flex:1;overflow:auto;min-height:50px;max-height:42vh;margin-bottom:10px;
     display:flex;flex-direction:column;gap:8px}
   .msg{padding:10px 12px;border-radius:13px;font-size:14px;line-height:1.45;max-width:86%;white-space:pre-wrap}
@@ -201,7 +207,7 @@
   <div id="map">
     <div id="scene">
       <div id="tiles"></div>
-      <svg id="route" preserveAspectRatio="none"><path id="routeCasing"/><path id="routeLine"/><path id="routeFlow"/></svg>
+      <svg id="route" preserveAspectRatio="none"><path id="trailLine"/><path id="routeCasing"/><path id="routeLine"/><path id="routeFlow"/></svg>
       <div id="cams"></div>
       <div id="dest"></div>
       <div id="me"><div id="meArrow"></div></div>
@@ -282,6 +288,7 @@
     <div class="asst">
       <div class="ah"><b>Помічник</b><button id="asstClose">✕</button></div>
       <label class="toggle"><span>🔊 Озвучувати маршрут</span><input type="checkbox" id="voiceChk" /></label>
+      <div class="trackrow"><span id="trackInfo">Записаний шлях: порожньо</span><button id="trackClear">Очистити</button></div>
       <div class="msgs" id="asstMsgs"></div>
       <div class="ain">
         <input id="asstInput" type="text" placeholder="Спитати помічника…" autocomplete="off" />
@@ -295,7 +302,7 @@
   <div class="dock">
     <button class="dl" id="dl">
       <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>
-      <span id="dlText">Завантажити цей район</span>
+      <span id="dlText">Завантажити / оновити район</span>
     </button>
     <div class="prog" id="prog"><div class="bar"><i id="bar"></i></div><div class="lbl" id="plbl">0%</div></div>
   </div>
@@ -306,10 +313,10 @@
     <h2>Підготуй мапу до тривоги</h2>
     <p>Зроби це раз, поки є інтернет. Під час тривоги мережа не потрібна — GPS веде тебе по збереженій мапі.</p>
     <ol>
-      <li>Знайди свій район на мапі</li>
-      <li>Натисни <b>«Завантажити цей район»</b></li>
+      <li>Дозволь доступ до геолокації</li>
+      <li>Знайди свій район і натисни <b>«Завантажити / оновити район»</b></li>
     </ol>
-    <button id="introGo">Зрозуміло</button>
+    <button id="introGo">Дозволити геолокацію</button>
   </div>
 </div>
 
@@ -406,12 +413,15 @@ let center=saved?{lat:saved.lat,lng:saved.lng}:KYIV;
 let zoom=saved?saved.z:13;
 let bearing=saved&&saved.b?saved.b:0;   // ручний поворот карти, градуси
 let displayRot=0;                        // фактичний кут сцени (для жестів)
+let smoothBearing=0,targetBearing=0,navTargetC=null,navRAF=0;
 let compassBtn=null,compassNeedle=null;
 let W=innerWidth,H=innerHeight;
 const mapEl=document.getElementById('map'),tilesEl=document.getElementById('tiles'),meEl=document.getElementById('me');
 const meArrowEl=document.getElementById('meArrow');
 const destEl=document.getElementById('dest'),routeSvg=document.getElementById('route'),routeLineEl=document.getElementById('routeLine');
 const routeCasingEl=document.getElementById('routeCasing'),routeFlowEl=document.getElementById('routeFlow');
+const trailLineEl=document.getElementById('trailLine');
+let track=[];   // записаний шлях [[lat,lng],...]
 let destination=null;   // {lat,lng,name}
 let routeCoords=[];     // [[lat,lng],...]
 let cameras=[];         // [{lat,lng}]
@@ -466,7 +476,18 @@ function render(){
     img.style.top =(y*TILE-originY)+'px';
   }
   // прибрати зайві
-  for(const [key,img] of tileNodes){if(!need.has(key)){img.remove();tileNodes.delete(key);}}
+  for(const [key,img] of tileNodes){
+    if(need.has(key)){if(img._rm){clearTimeout(img._rm);img._rm=0;}}
+    else if(!img._rm){img._rm=setTimeout(()=>{img.remove();tileNodes.delete(key);},600);}
+  }
+
+  // записаний шлях (де ти вже проїхав)
+  if(track.length>1){
+    let td='';
+    for(let i=0;i<track.length;i++){const p=project(track[i][0],track[i][1],zoom);
+      td+=(i?'L':'M')+(p.x-originX).toFixed(1)+' '+(p.y-originY).toFixed(1)+' ';}
+    trailLineEl.setAttribute('d',td);
+  }else trailLineEl.setAttribute('d','');
 
   // маршрут
   if(routeCoords.length>1){
@@ -494,17 +515,17 @@ function render(){
     else{meEl.style.transform='none';meArrowEl.style.display='none';}
   }
 
-  // нахил (3D) + поворот (курс у навігації або ручний)
+  // нахил (3D) + поворот: за курсом у навігації (плавно), або ручний
   const pitch=d3?54:0;
-  const rot=(navMode&&hd!=null)?-hd:bearing;
+  const rot=navMode?smoothBearing:bearing;
   displayRot=rot;
-  sceneEl.style.transform=`rotateX(${pitch}deg) rotate(${rot.toFixed(1)}deg)`;
-  if(compassBtn)compassBtn.style.display=(!navMode&&Math.abs(((bearing%360)+360)%360)>0.5)?'flex':'none';
-  if(compassNeedle)compassNeedle.style.transform='rotate('+(-rot)+'deg)';
+  sceneEl.style.transform=`rotateX(${pitch}deg) rotate(${rot.toFixed(2)}deg)`;
+  if(compassBtn)compassBtn.style.display=(!navMode&&Math.abs(((rot%360)+360)%360)>0.5)?'flex':'none';
+  if(compassNeedle)compassNeedle.style.transform='rotate('+(-rot).toFixed(1)+'deg)';
 
   localStorage.setItem('view',JSON.stringify({lat:center.lat,lng:center.lng,z:zoom,b:bearing}));
 }
-function clearTiles(){for(const [,img] of tileNodes)img.remove();tileNodes.clear();}
+function clearTiles(){for(const [,img] of tileNodes){if(img._rm)clearTimeout(img._rm);img.remove();}tileNodes.clear();}
 
 /* ---------- зум зі збереженням точки під курсором ---------- */
 function zoomTo(nz,sx,sy){
@@ -552,7 +573,7 @@ mapEl.addEventListener('pointermove',e=>{
     requestRender();
   }else if(pts.size===2&&pinchStart){
     const a=[...pts.values()];
-    if(!navMode){                         // крутимо карту (не під час навігації за курсом)
+    if(!navMode){                         // обертання карти двома пальцями
       const ang=Math.atan2(a[1].y-a[0].y,a[1].x-a[0].x);
       bearing=pinchStart.bearing+(ang-pinchStart.ang)*180/Math.PI;
     }
@@ -581,16 +602,30 @@ compassNeedle=document.getElementById('compassNeedle');
 compassBtn.onclick=()=>{bearing=0;render();};
 
 /* ---------- GPS ---------- */
-let mePos=null,firstFix=true;const bGps=document.getElementById('bGps');
-if('geolocation' in navigator){
-  navigator.geolocation.watchPosition(p=>{
-    mePos={lat:p.coords.latitude,lng:p.coords.longitude};bGps.className='badge on';
-    if(firstFix&&!saved){firstFix=false;center={...mePos};if(zoom<15)zoom=15;clearTiles();}
-    if(navMode){updateNav();checkCameras();}
-    else{render();navVoice();checkCameras();}
-  },()=>{bGps.className='badge warn';},{enableHighAccuracy:true,maximumAge:3000,timeout:15000});
+let mePos=null,firstFix=true,watchId=null;const bGps=document.getElementById('bGps');
+function onPos(p){
+  mePos={lat:p.coords.latitude,lng:p.coords.longitude};bGps.className='badge on';
+  if(firstFix&&!saved){firstFix=false;center={...mePos};if(zoom<15)zoom=15;clearTiles();}
+  recordTrack();
+  if(navMode){updateNav();checkCameras();}
+  else{render();navVoice();checkCameras();}
 }
-document.getElementById('locate').onclick=()=>{if(mePos){center={...mePos};if(zoom<16)zoom=16;clearTiles();render();}};
+function onPosErr(){bGps.className='badge warn';}
+function startWatch(){
+  if(watchId!=null||!('geolocation' in navigator))return;
+  watchId=navigator.geolocation.watchPosition(onPos,onPosErr,{enableHighAccuracy:true,maximumAge:2000,timeout:15000});
+}
+function requestLocation(){           // явний запит дозволу (через дотик — надійно для iOS)
+  if(!('geolocation' in navigator)){onPosErr();return;}
+  navigator.geolocation.getCurrentPosition(onPos,onPosErr,{enableHighAccuracy:true,timeout:15000});
+  startWatch();
+}
+startWatch();
+bGps.style.cursor='pointer';
+bGps.onclick=requestLocation;          // тапни «GPS», щоб надати доступ
+document.getElementById('locate').onclick=()=>{
+  if(mePos){center={...mePos};if(zoom<16)zoom=16;clearTiles();render();}else requestLocation();
+};
 
 /* ---------- стиль карти ---------- */
 const attribEl=document.querySelector('.attrib');
@@ -639,15 +674,13 @@ dlBtn.onclick=async()=>{
   dlBtn.disabled=true;dlText.textContent='Завантаження…';prog.classList.add('show');
   let done=0;const total=list.length,CONC=6,q=list.slice();
   async function worker(){while(q.length){const [z,x,y]=q.pop();const key=tileKey(z,x,y);
-    try{const ex=await getTile(key);
-      if(!ex){const r=await fetch(TILE_URL(z,x,y));if(r.ok)await putTile(key,await r.blob());}
-    }catch{}
+    try{const r=await fetch(TILE_URL(z,x,y),{cache:'reload'});if(r.ok)await putTile(key,await r.blob());}catch{}
     done++;const p=Math.round(done/total*100);bar.style.width=p+'%';plbl.textContent=`${p}% (${done}/${total})`;}}
   await Promise.all(Array.from({length:CONC},worker));
   plbl.textContent=`Готово ✓ ${total} плиток. Шукаю камери…`;
   const cams=await fetchCameras();
   plbl.textContent=`Готово ✓ ${total} плиток`+(cams?`, +${cams} камер`:'')+` збережено офлайн`;
-  dlBtn.disabled=false;dlText.textContent='Завантажити цей район';refreshCount();render();
+  dlBtn.disabled=false;dlText.textContent='Завантажити / оновити район';refreshCount();render();
 };
 
 /* ---------- маршрут А→Б ---------- */
@@ -690,24 +723,40 @@ function startNav(){
   navMode=true;arrived=false;stepIndex=0;speakUnlocked=true;
   steps.forEach(s=>{s._prep=false;s._do=false;});
   document.body.classList.add('navon');navTop.classList.add('show');navBot.classList.add('show');
+  sceneEl.style.transition='none';        // плавність даємо самі, через інтерполяцію
   zoom=Math.max(zoom,17);
+  const hd=headingToFollow();targetBearing=hd!=null?-hd:0;smoothBearing=targetBearing;
+  navTargetC=mePos?{...mePos}:{...center};
+  if(mePos){center={...mePos};updateNav();}
   if(steps.length)speak(steps[0].text);
-  if(mePos)updateNav();else render();
+  if(!navRAF)navRAF=requestAnimationFrame(navLoop);
 }
 function stopNav(){
   navMode=false;document.body.classList.remove('navon');
   navTop.classList.remove('show');navBot.classList.remove('show');
+  if(navRAF){cancelAnimationFrame(navRAF);navRAF=0;}
+  sceneEl.style.transition='';
   try{speechSynthesis.cancel();}catch{}
   render();
 }
+function navLoop(){                         // плавне слідування + поворот
+  if(!navMode){navRAF=0;return;}
+  if(navTargetC){
+    center.lat+=(navTargetC.lat-center.lat)*0.18;
+    center.lng+=(navTargetC.lng-center.lng)*0.18;
+  }
+  let d=((targetBearing-smoothBearing+540)%360)-180;
+  smoothBearing+=d*0.16;
+  render();
+  navRAF=requestAnimationFrame(navLoop);
+}
 function navZoom(d){            // ближче маневр → більший зум
-  if(d<70)return 18;
-  if(d<200)return 17;
-  if(d<600)return 16;
-  return 15;
+  if(d<80)return 18;
+  if(d<400)return 17;
+  return 16;
 }
 function updateNav(){
-  if(mePos)center={...mePos};
+  navTargetC=mePos?{...mePos}:navTargetC;
   let aimDist;
   if(steps.length){
     while(stepIndex<steps.length-1&&distM(mePos.lat,mePos.lng,steps[stepIndex].lat,steps[stepIndex].lng)<25)stepIndex++;
@@ -719,6 +768,7 @@ function updateNav(){
     if(voiceOn&&aimDist<=250&&!st._prep){st._prep=true;speak('Через '+speakDist(aimDist)+'. '+st.text);}
     if(voiceOn&&aimDist<=40&&!st._do){st._do=true;speak(st.text);}
   }else{ntPrimary.textContent='Прямуйте до місця';ntDist.textContent='';ntThen.classList.remove('show');}
+  const hd=headingToFollow();if(hd!=null)targetBearing=-hd;     // ціль повороту за курсом
   const rem=remainingMeters();
   if(aimDist==null)aimDist=rem;
   const remDur=totalDist?totalDur*(rem/totalDist):rem/11;
@@ -727,9 +777,8 @@ function updateNav(){
   nbMin.textContent=Math.max(1,Math.round(remDur/60));
   nbKm.textContent=(rem/1000).toFixed(rem<10000?1:0);
   if(rem<=35&&!arrived){arrived=true;if(voiceOn)speak('Ви прибули до пункту призначення.');}
-  const dz=navZoom(aimDist);                 // автозум на поворотах
-  if(dz!==zoom){zoom=dz;clearTiles();}
-  render();
+  const dz=navZoom(aimDist);                 // автозум на поворотах (з гістерезисом)
+  if(Math.abs(dz-zoom)>=1){zoom=dz;clearTiles();}
 }
 rbGo.onclick=startNav;
 nbStop.onclick=stopNav;
@@ -924,7 +973,8 @@ async function sendAsst(){
   if(res.error){addMsg('a',res.error==='no-key'?'Додай Gemini ключ внизу.':'Помилка: '+res.error);return;}
   addMsg('a',res.text);speak(res.text);
 }
-asstBtn.onclick=()=>{asstBg.classList.add('show');footUI();speakUnlocked=true;};
+asstBtn.onclick=()=>{asstBg.classList.add('show');footUI();updateTrackInfo();speakUnlocked=true;};
+document.getElementById('trackClear').onclick=clearTrack;
 document.getElementById('asstClose').onclick=()=>asstBg.classList.remove('show');
 asstBg.addEventListener('click',e=>{if(e.target===asstBg)asstBg.classList.remove('show');});
 asstSend.onclick=sendAsst;
@@ -962,13 +1012,30 @@ function checkCameras(){
     if(d>500)c._warned=false;}
 }
 
+/* ---------- автозапис поїздки ---------- */
+function saveTrack(){try{localStorage.setItem('track',JSON.stringify(track));}catch{}}
+function loadTrack(){try{track=JSON.parse(localStorage.getItem('track')||'[]');}catch{track=[];}}
+function recordTrack(){
+  if(!mePos)return;
+  const last=track[track.length-1];
+  if(!last||distM(last[0],last[1],mePos.lat,mePos.lng)>15){
+    track.push([+mePos.lat.toFixed(5),+mePos.lng.toFixed(5)]);
+    if(track.length>5000)track.shift();
+    saveTrack();
+  }
+}
+function trackMeters(){let m=0;for(let i=1;i<track.length;i++)m+=distM(track[i-1][0],track[i-1][1],track[i][0],track[i][1]);return m;}
+function clearTrack(){track=[];localStorage.removeItem('track');updateTrackInfo();render();}
+function updateTrackInfo(){const el=document.getElementById('trackInfo');
+  if(el)el.textContent='Записаний шлях: '+(track.length>1?fmtKm(trackMeters()):'порожньо');}
+
 /* ---------- перший запуск ---------- */
 const intro=document.getElementById('intro');
 if(localStorage.getItem('intro_done'))intro.classList.add('hide');
-document.getElementById('introGo').onclick=()=>{intro.classList.add('hide');localStorage.setItem('intro_done','1');};
+document.getElementById('introGo').onclick=()=>{intro.classList.add('hide');localStorage.setItem('intro_done','1');requestLocation();};
 
 /* ---------- старт ---------- */
-loadRoute();loadCameras();applyTilt();
+loadRoute();loadCameras();loadTrack();applyTilt();
 render();refreshCount();
 </script>
 </body>
