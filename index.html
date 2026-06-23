@@ -19,7 +19,11 @@
 
   #me{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;
     background:#3B9DFF;border:2.5px solid #fff;display:none;pointer-events:none;z-index:5;
-    box-shadow:0 0 12px rgba(59,157,255,.9),0 1px 3px rgba(0,0,0,.6)}
+    box-shadow:0 0 12px rgba(59,157,255,.9),0 1px 3px rgba(0,0,0,.6);
+    transition:transform .18s linear}
+  #meArrow{position:absolute;left:50%;top:-15px;width:0;height:0;margin-left:-8px;display:none;
+    border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:14px solid #FFB000;
+    filter:drop-shadow(0 0 5px rgba(255,176,0,.95))}
   #me::before{content:"";position:absolute;left:50%;top:50%;width:16px;height:16px;
     margin:-8px 0 0 -8px;border-radius:50%;background:rgba(59,157,255,.45);
     animation:pulse 2s ease-out infinite}
@@ -132,7 +136,7 @@
     <div id="tiles"></div>
     <svg id="route" preserveAspectRatio="none"><path id="routeCasing"/><path id="routeLine"/><path id="routeFlow"/></svg>
     <div id="dest"></div>
-    <div id="me"></div>
+    <div id="me"><div id="meArrow"></div></div>
     <div class="attrib">© <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div>
   </div>
 
@@ -227,6 +231,30 @@ function unproject(x,y,z){const s=TILE*2**z;
   const lat=180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n)));
   return {lat,lng};}
 
+/* напрямок руху: азимут від мене до точки попереду по маршруту (0°=північ) */
+function bearingDeg(la1,ln1,la2,ln2){
+  const f1=la1*Math.PI/180,f2=la2*Math.PI/180,dl=(ln2-ln1)*Math.PI/180;
+  const y=Math.sin(dl)*Math.cos(f2);
+  const x=Math.cos(f1)*Math.sin(f2)-Math.sin(f1)*Math.cos(f2)*Math.cos(dl);
+  return (Math.atan2(y,x)*180/Math.PI+360)%360;
+}
+function headingToFollow(){
+  if(!mePos)return null;
+  if(routeCoords.length>1){
+    const z=zoom, me=project(mePos.lat,mePos.lng,z);
+    let bi=0,bd=Infinity;
+    for(let i=0;i<routeCoords.length;i++){const p=project(routeCoords[i][0],routeCoords[i][1],z);
+      const d=(p.x-me.x)**2+(p.y-me.y)**2; if(d<bd){bd=d;bi=i;}}
+    let acc=0,target=routeCoords[routeCoords.length-1],prev=project(routeCoords[bi][0],routeCoords[bi][1],z);
+    for(let i=bi+1;i<routeCoords.length;i++){const p=project(routeCoords[i][0],routeCoords[i][1],z);
+      acc+=Math.hypot(p.x-prev.x,p.y-prev.y);prev=p;
+      if(acc>=70){target=routeCoords[i];break;}}
+    return bearingDeg(mePos.lat,mePos.lng,target[0],target[1]);
+  }
+  if(destination)return bearingDeg(mePos.lat,mePos.lng,destination.lat,destination.lng);
+  return null;
+}
+
 /* ---------- IndexedDB для плиток ---------- */
 const DB='offmap',STORE='tiles';
 function idb(){return new Promise((res,rej)=>{const r=indexedDB.open(DB,1);
@@ -248,6 +276,7 @@ let center=saved?{lat:saved.lat,lng:saved.lng}:KYIV;
 let zoom=saved?saved.z:13;
 let W=innerWidth,H=innerHeight;
 const mapEl=document.getElementById('map'),tilesEl=document.getElementById('tiles'),meEl=document.getElementById('me');
+const meArrowEl=document.getElementById('meArrow');
 const destEl=document.getElementById('dest'),routeSvg=document.getElementById('route'),routeLineEl=document.getElementById('routeLine');
 const routeCasingEl=document.getElementById('routeCasing'),routeFlowEl=document.getElementById('routeFlow');
 let destination=null;   // {lat,lng,name}
@@ -312,9 +341,13 @@ function render(){
     destEl.style.left=(p.x-originX)+'px';destEl.style.top=(p.y-originY)+'px';destEl.style.display='block';}
   else destEl.style.display='none';
 
-  // GPS-крапка
+  // GPS-крапка + стрілка напрямку
   if(mePos){const p=project(mePos.lat,mePos.lng,zoom);
-    meEl.style.left=(p.x-originX)+'px';meEl.style.top=(p.y-originY)+'px';meEl.style.display='block';}
+    meEl.style.left=(p.x-originX)+'px';meEl.style.top=(p.y-originY)+'px';meEl.style.display='block';
+    const hd=headingToFollow();
+    if(hd!=null){meEl.style.transform='rotate('+hd.toFixed(1)+'deg)';meArrowEl.style.display='block';}
+    else{meEl.style.transform='none';meArrowEl.style.display='none';}
+  }
 
   localStorage.setItem('view',JSON.stringify({lat:center.lat,lng:center.lng,z:zoom}));
 }
