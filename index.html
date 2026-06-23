@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0E1116" />
+<title>Офлайн-мапа</title>
+<style>
+  :root{--bg:#0E1116;--panel:#161B22;--line:#232A33;--text:#E8EDF2;--muted:#8B97A4;--signal:#FFB000}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+  html,body{height:100%;margin:0}
+  body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Roboto,sans-serif;overflow:hidden}
+  #map{position:absolute;inset:0;background:#0b0e12;touch-action:none;cursor:grab}
+  #map.drag{cursor:grabbing}
+  #tiles img{position:absolute;width:256px;height:256px;display:block;image-rendering:auto;pointer-events:none}
+  #me{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#4aa3ff;
+    border:2px solid #fff;box-shadow:0 0 0 6px rgba(74,163,255,.25);display:none;pointer-events:none;z-index:5}
+  .attrib{position:absolute;right:0;bottom:0;z-index:6;font-size:10px;color:var(--muted);
+    background:rgba(14,17,22,.7);padding:2px 6px;border-top-left-radius:6px}
+  .attrib a{color:var(--muted)}
+
+  header{position:absolute;top:0;left:0;right:0;z-index:10;
+    padding:calc(env(safe-area-inset-top) + 10px) 12px 10px;display:flex;gap:6px;
+    background:linear-gradient(#0E1116 35%,rgba(14,17,22,0));pointer-events:none}
+  .badge{display:flex;align-items:center;gap:5px;font-size:11px;background:var(--panel);
+    border:1px solid var(--line);padding:5px 9px;border-radius:999px;color:var(--muted)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+  .badge.on .dot{background:#35D07F}.badge.on{color:var(--text)}
+  .badge.warn .dot{background:var(--signal)}.badge.warn{color:var(--text)}
+
+  .zoom{position:absolute;left:12px;bottom:150px;z-index:10;display:flex;flex-direction:column;gap:6px}
+  .zoom button,.locate{width:48px;height:48px;border-radius:12px;background:var(--panel);
+    border:1px solid var(--line);color:var(--text);font-size:24px;display:flex;align-items:center;
+    justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+  .locate{position:absolute;right:12px;bottom:150px;z-index:10;border-radius:50%;font-size:0}
+
+  .dock{position:absolute;left:0;right:0;bottom:0;z-index:10;
+    padding:14px 12px calc(env(safe-area-inset-bottom) + 14px);
+    background:linear-gradient(rgba(14,17,22,0),#0E1116 40%)}
+  button.dl{width:100%;border:1px solid var(--signal);background:var(--signal);color:#1a1200;
+    padding:15px;border-radius:13px;font-size:15px;font-weight:700;display:flex;align-items:center;
+    justify-content:center;gap:8px;cursor:pointer;min-height:52px}
+  button.dl:active{transform:scale(.99)}button.dl:disabled{opacity:.55}
+  .prog{margin-top:10px;display:none}.prog.show{display:block}
+  .bar{height:8px;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .bar>i{display:block;height:100%;width:0;background:var(--signal);transition:width .15s}
+  .lbl{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
+</style>
+</head>
+<body>
+  <div id="map">
+    <div id="tiles"></div>
+    <div id="me"></div>
+    <div class="attrib">© <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div>
+  </div>
+
+  <header>
+    <div class="badge" id="bGps"><span class="dot"></span><span>GPS</span></div>
+    <div class="badge" id="bNet"><span class="dot"></span><span>офлайн</span></div>
+    <div class="badge" id="bMap"><span class="dot"></span><span>0 плиток</span></div>
+  </header>
+
+  <div class="zoom">
+    <button id="zin">+</button>
+    <button id="zout">−</button>
+  </div>
+  <div class="locate" id="locate" title="До мене">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8EDF2" stroke-width="2">
+      <circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+  </div>
+
+  <div class="dock">
+    <button class="dl" id="dl">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>
+      <span id="dlText">Завантажити цей район</span>
+    </button>
+    <div class="prog" id="prog"><div class="bar"><i id="bar"></i></div><div class="lbl" id="plbl">0%</div></div>
+  </div>
+
+<script>
+'use strict';
+const TILE=256, MINZ=3, MAXZ=19;
+const TILE_URL=(z,x,y)=>`https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+const DL_ZOOMS=[14,15,16,17], DL_CAP=2500, KYIV={lat:50.4501,lng:30.5234};
+
+/* ---------- проекція Web Mercator ---------- */
+function project(lat,lng,z){const s=TILE*2**z;
+  const x=(lng+180)/360*s;
+  const sin=Math.sin(lat*Math.PI/180);
+  const y=(0.5-Math.log((1+sin)/(1-sin))/(4*Math.PI))*s;
+  return {x,y};}
+function unproject(x,y,z){const s=TILE*2**z;
+  const lng=x/s*360-180;
+  const n=Math.PI-2*Math.PI*y/s;
+  const lat=180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n)));
+  return {lat,lng};}
+
+/* ---------- IndexedDB для плиток ---------- */
+const DB='offmap',STORE='tiles';
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open(DB,1);
+  r.onupgradeneeded=()=>r.result.createObjectStore(STORE);
+  r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+async function getTile(k){const d=await idb();return new Promise((res)=>{
+  const r=d.transaction(STORE).objectStore(STORE).get(k);
+  r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null);});}
+async function putTile(k,blob){const d=await idb();return new Promise((res)=>{
+  const t=d.transaction(STORE,'readwrite');t.objectStore(STORE).put(blob,k);
+  t.oncomplete=()=>res();t.onerror=()=>res();});}
+async function countTiles(){const d=await idb();return new Promise((res)=>{
+  const r=d.transaction(STORE).objectStore(STORE).count();
+  r.onsuccess=()=>res(r.result||0);r.onerror=()=>res(0);});}
+
+/* ---------- стан мапи ---------- */
+const saved=JSON.parse(localStorage.getItem('view')||'null');
+let center=saved?{lat:saved.lat,lng:saved.lng}:KYIV;
+let zoom=saved?saved.z:13;
+let W=innerWidth,H=innerHeight;
+const mapEl=document.getElementById('map'),tilesEl=document.getElementById('tiles'),meEl=document.getElementById('me');
+
+const urlCache=new Map();      // key -> objectURL
+const tileNodes=new Map();     // key -> img element
+function tileKey(z,x,y){return z+'/'+x+'/'+y;}
+
+function loadTileSrc(img,z,x,y){
+  const key=tileKey(z,x,y);
+  if(urlCache.has(key)){img.src=urlCache.get(key);return;}
+  getTile(key).then(blob=>{
+    if(blob){const u=URL.createObjectURL(blob);urlCache.set(key,u);img.src=u;return;}
+    if(navigator.onLine){
+      fetch(TILE_URL(z,x,y)).then(r=>r.ok?r.blob():null).then(b=>{
+        if(!b)return; putTile(key,b);
+        const u=URL.createObjectURL(b);urlCache.set(key,u);
+        if(img.isConnected)img.src=u;
+      }).catch(()=>{ if(img.isConnected)img.src=TILE_URL(z,x,y); });
+    }
+  });
+}
+
+let rafPending=false;
+function requestRender(){if(rafPending)return;rafPending=true;requestAnimationFrame(()=>{rafPending=false;render();});}
+
+function render(){
+  W=innerWidth;H=innerHeight;
+  const c=project(center.lat,center.lng,zoom);
+  const originX=c.x-W/2, originY=c.y-H/2;
+  const max=2**zoom;
+  const x0=Math.floor(originX/TILE), x1=Math.floor((originX+W)/TILE);
+  const y0=Math.floor(originY/TILE), y1=Math.floor((originY+H)/TILE);
+
+  const need=new Set();
+  for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++){
+    if(y<0||y>=max)continue;
+    const wx=((x%max)+max)%max;                 // горизонтальне «обгортання»
+    const key=tileKey(zoom,wx,y);
+    need.add(key);
+    let img=tileNodes.get(key);
+    if(!img){img=new Image();img.decoding='async';tileNodes.set(key,img);tilesEl.appendChild(img);loadTileSrc(img,zoom,wx,y);}
+    img.style.left=(x*TILE-originX)+'px';
+    img.style.top =(y*TILE-originY)+'px';
+  }
+  // прибрати зайві
+  for(const [key,img] of tileNodes){if(!need.has(key)){img.remove();tileNodes.delete(key);}}
+
+  // GPS-крапка
+  if(mePos){const p=project(mePos.lat,mePos.lng,zoom);
+    meEl.style.left=(p.x-originX)+'px';meEl.style.top=(p.y-originY)+'px';meEl.style.display='block';}
+
+  localStorage.setItem('view',JSON.stringify({lat:center.lat,lng:center.lng,z:zoom}));
+}
+function clearTiles(){for(const [,img] of tileNodes)img.remove();tileNodes.clear();}
+
+/* ---------- зум зі збереженням точки під курсором ---------- */
+function zoomTo(nz,sx,sy){
+  nz=Math.max(MINZ,Math.min(MAXZ,Math.round(nz)));
+  if(nz===zoom)return;
+  const c=project(center.lat,center.lng,zoom);
+  const wx=c.x-W/2+sx, wy=c.y-H/2+sy;          // світові px точки під пальцем
+  const ll=unproject(wx,wy,zoom);
+  zoom=nz;
+  const np=project(ll.lat,ll.lng,zoom);         // та сама точка на новому зумі
+  const ncx=np.x-(sx-W/2), ncy=np.y-(sy-H/2);   // новий центр у px
+  center=unproject(ncx,ncy,zoom);
+  clearTiles();render();
+}
+document.getElementById('zin').onclick=()=>zoomTo(zoom+1,W/2,H/2);
+document.getElementById('zout').onclick=()=>zoomTo(zoom-1,W/2,H/2);
+mapEl.addEventListener('wheel',e=>{e.preventDefault();zoomTo(zoom+(e.deltaY<0?1:-1),e.clientX,e.clientY);},{passive:false});
+let lastTap=0;
+mapEl.addEventListener('dblclick',e=>zoomTo(zoom+1,e.clientX,e.clientY));
+
+/* ---------- панорамування + пінч ---------- */
+const pts=new Map();let panStart=null,pinchStart=null;
+mapEl.addEventListener('pointerdown',e=>{mapEl.setPointerCapture(e.pointerId);
+  pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size===1){mapEl.classList.add('drag');
+    panStart={x:e.clientX,y:e.clientY,c:project(center.lat,center.lng,zoom)};
+    const now=Date.now();if(now-lastTap<300){zoomTo(zoom+1,e.clientX,e.clientY);}lastTap=now;
+  }else if(pts.size===2){const a=[...pts.values()];
+    pinchStart={dist:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),zoom,
+      mid:{x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2},c:project(center.lat,center.lng,zoom)};panStart=null;}
+});
+mapEl.addEventListener('pointermove',e=>{
+  if(!pts.has(e.pointerId))return;
+  pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size===1&&panStart){
+    const dx=e.clientX-panStart.x, dy=e.clientY-panStart.y;
+    center=unproject(panStart.c.x-dx,panStart.c.y-dy,zoom);
+    requestRender();
+  }else if(pts.size===2&&pinchStart){
+    const a=[...pts.values()];
+    const mid={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2};
+    const dx=mid.x-pinchStart.mid.x, dy=mid.y-pinchStart.mid.y;
+    center=unproject(pinchStart.c.x-dx,pinchStart.c.y-dy,zoom);
+    requestRender();
+  }
+});
+function endPointer(e){
+  if(pinchStart&&pts.size===2){
+    const a=[...pts.values()];
+    const dist=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);
+    const nz=pinchStart.zoom+Math.log2(dist/pinchStart.dist);
+    zoomTo(nz,pinchStart.mid.x,pinchStart.mid.y);
+  }
+  pts.delete(e.pointerId);
+  if(pts.size<2)pinchStart=null;
+  if(pts.size===0){mapEl.classList.remove('drag');panStart=null;}
+}
+mapEl.addEventListener('pointerup',endPointer);
+mapEl.addEventListener('pointercancel',endPointer);
+addEventListener('resize',requestRender);
+
+/* ---------- GPS ---------- */
+let mePos=null;const bGps=document.getElementById('bGps');
+if('geolocation' in navigator){
+  navigator.geolocation.watchPosition(p=>{
+    mePos={lat:p.coords.latitude,lng:p.coords.longitude};bGps.className='badge on';render();
+  },()=>{bGps.className='badge warn';},{enableHighAccuracy:true,maximumAge:3000,timeout:15000});
+}
+document.getElementById('locate').onclick=()=>{if(mePos){center={...mePos};if(zoom<16)zoom=16;clearTiles();render();}};
+
+/* ---------- мережа + лічильник ---------- */
+const bNet=document.getElementById('bNet'),bMap=document.getElementById('bMap');
+function netUI(){const on=navigator.onLine;bNet.className='badge '+(on?'on':'warn');
+  bNet.querySelector('span:last-child').textContent=on?'онлайн':'офлайн';}
+addEventListener('online',netUI);addEventListener('offline',netUI);netUI();
+async function refreshCount(){const n=await countTiles();
+  bMap.querySelector('span:last-child').textContent=n+' плиток';bMap.className='badge '+(n>0?'on':'');}
+
+/* ---------- завантаження району ---------- */
+function tilesForView(){
+  const c=project(center.lat,center.lng,zoom);
+  const tl=unproject(c.x-W/2,c.y-H/2,zoom), br=unproject(c.x+W/2,c.y+H/2,zoom);
+  const list=[];
+  for(const z of DL_ZOOMS){const s=2**z;
+    const x0=Math.floor((tl.lng+180)/360*s), x1=Math.floor((br.lng+180)/360*s);
+    const yT=lat2y(tl.lat,z), yB=lat2y(br.lat,z);
+    for(let x=Math.min(x0,x1);x<=Math.max(x0,x1);x++)
+      for(let y=Math.min(yT,yB);y<=Math.max(yT,yB);y++)
+        if(x>=0&&y>=0&&x<s&&y<s)list.push([z,x,y]);
+  }
+  return list;
+}
+function lat2y(lat,z){const r=lat*Math.PI/180;
+  return Math.floor((1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*2**z);}
+
+const dlBtn=document.getElementById('dl'),dlText=document.getElementById('dlText'),
+      prog=document.getElementById('prog'),bar=document.getElementById('bar'),plbl=document.getElementById('plbl');
+dlBtn.onclick=async()=>{
+  if(!navigator.onLine){alert('Немає інтернету. Спершу під'+"'"+'єднайся, щоб завантажити район.');return;}
+  const list=tilesForView();
+  if(list.length>DL_CAP){alert(`Область завелика: ${list.length} плиток (ліміт ${DL_CAP}). Наблизь карту ближче.`);return;}
+  dlBtn.disabled=true;dlText.textContent='Завантаження…';prog.classList.add('show');
+  let done=0;const total=list.length,CONC=6,q=list.slice();
+  async function worker(){while(q.length){const [z,x,y]=q.pop();const key=tileKey(z,x,y);
+    try{const ex=await getTile(key);
+      if(!ex){const r=await fetch(TILE_URL(z,x,y));if(r.ok)await putTile(key,await r.blob());}
+    }catch{}
+    done++;const p=Math.round(done/total*100);bar.style.width=p+'%';plbl.textContent=`${p}% (${done}/${total})`;}}
+  await Promise.all(Array.from({length:CONC},worker));
+  plbl.textContent=`Готово ✓ ${total} плиток збережено офлайн`;
+  dlBtn.disabled=false;dlText.textContent='Завантажити цей район';refreshCount();render();
+};
+
+/* ---------- старт ---------- */
+render();refreshCount();
+</script>
+</body>
+</html>
