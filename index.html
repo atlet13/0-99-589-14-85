@@ -1,1042 +1,463 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<meta name="theme-color" content="#0E1116" />
-<title>Офлайн-мапа</title>
-<style>
-  :root{--bg:#0E1116;--panel:#161B22;--line:#232A33;--text:#E8EDF2;--muted:#8B97A4;--signal:#FFB000}
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-  html,body{height:100%;margin:0}
-  body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Roboto,sans-serif;overflow:hidden}
-  #map{position:absolute;inset:0;background:#0b0e12;touch-action:none;cursor:grab;
-    perspective:900px;perspective-origin:50% 32%}
-  #map.drag{cursor:grabbing}
-  #scene{position:absolute;inset:0;transform-origin:50% 58%;transition:transform .2s ease;
-    transform-style:preserve-3d}
-  #map.navon #scene{transition:none}
-  #map.d3 #scene{transform:rotateX(54deg)}
-  .sky{position:absolute;left:0;right:0;top:0;height:46%;z-index:2;pointer-events:none;display:none;
-    background:linear-gradient(to bottom,#0b0e12 8%,rgba(11,14,18,.85) 38%,rgba(11,14,18,0))}
-  #map.d3 .sky{display:block}
-  #map::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
-    box-shadow:inset 0 0 120px 20px rgba(0,0,0,.45)}  /* м'яка віньєтка */
-  #cams .cam{position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:7px;
-    background:#11151b;border:1.5px solid #FF5A4D;display:flex;align-items:center;justify-content:center;
-    font-size:12px;pointer-events:none;z-index:4;box-shadow:0 1px 5px rgba(0,0,0,.55)}
-  #tiles img{position:absolute;width:256px;height:256px;display:block;pointer-events:none;
-    transition:opacity .35s ease}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DARK TRADING 2.0</title>
+    <style>
+        :root {
+            --bg-main: #06090e;
+            --card-bg: rgba(13, 18, 30, 0.95);
+            --border-color: rgba(0, 240, 255, 0.15);
+            --neon-blue: #00f0ff;
+            --neon-purple: #9d00ff;
+            --green: #00ff88;
+            --red: #ff2a5f;
+            --text-main: #ffffff;
+            --text-muted: #64748b;
+        }
 
-  #me{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;
-    background:#3B9DFF;border:2.5px solid #fff;display:none;pointer-events:none;z-index:5;
-    box-shadow:0 0 12px rgba(59,157,255,.9),0 1px 3px rgba(0,0,0,.6);
-    transition:transform .18s linear}
-  #meArrow{position:absolute;left:50%;top:-15px;width:0;height:0;margin-left:-8px;display:none;
-    border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:14px solid #FFB000;
-    filter:drop-shadow(0 0 5px rgba(255,176,0,.95))}
-  #me::before{content:"";position:absolute;left:50%;top:50%;width:16px;height:16px;
-    margin:-8px 0 0 -8px;border-radius:50%;background:rgba(59,157,255,.45);
-    animation:pulse 2s ease-out infinite}
-  @keyframes pulse{0%{transform:scale(1);opacity:.7}70%{transform:scale(3.4);opacity:0}100%{opacity:0}}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
 
-  #route{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
-  #trailLine{fill:none;stroke:#4aa3ff;stroke-width:4;stroke-linejoin:round;stroke-linecap:round;opacity:.5}
-  #routeCasing{fill:none;stroke:rgba(7,9,12,.85);stroke-width:10;stroke-linejoin:round;stroke-linecap:round}
-  #routeLine{fill:none;stroke:#FFB000;stroke-width:5.5;stroke-linejoin:round;stroke-linecap:round;
-    filter:drop-shadow(0 0 6px rgba(255,176,0,.6))}
-  #routeFlow{fill:none;stroke:#FFE08A;stroke-width:2.5;stroke-linecap:round;
-    stroke-dasharray:2 22;animation:flow 1.1s linear infinite}
-  @keyframes flow{to{stroke-dashoffset:-24}}
+        body {
+            background-color: var(--bg-main);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(157, 0, 255, 0.15) 0%, transparent 60%),
+                radial-gradient(circle at 50% 100%, rgba(0, 240, 255, 0.1) 0%, transparent 60%);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
 
-  #dest{position:absolute;width:20px;height:20px;margin:-22px 0 0 -10px;display:none;
-    pointer-events:none;z-index:5;filter:drop-shadow(0 3px 5px rgba(0,0,0,.55))}
-  #dest::before{content:"";position:absolute;inset:0;background:#FF5A4D;
-    border:2.5px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg)}
-  #dest::after{content:"";position:absolute;left:50%;top:42%;width:6px;height:6px;margin:-3px 0 0 -3px;
-    background:#fff;border-radius:50%}
+        .app-container {
+            width: 100%;
+            max-width: 440px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 240, 255, 0.03);
+            backdrop-filter: blur(16px);
+            position: relative;
+            overflow: hidden;
+        }
 
-  .attrib{position:absolute;right:0;bottom:0;z-index:6;font-size:10px;color:var(--muted);
-    background:rgba(14,17,22,.55);backdrop-filter:blur(4px);padding:3px 7px;border-top-left-radius:7px}
-  .attrib a{color:var(--muted)}
+        .app-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), var(--neon-purple), transparent);
+        }
 
-  header{position:absolute;top:0;left:0;right:0;z-index:10;
-    padding:calc(env(safe-area-inset-top) + 10px) 12px 10px;display:flex;gap:6px;
-    background:linear-gradient(#0E1116 35%,rgba(14,17,22,0));pointer-events:none}
-  .badge{display:flex;align-items:center;gap:5px;font-size:11px;background:var(--panel);
-    border:1px solid var(--line);padding:5px 9px;border-radius:999px;color:var(--muted)}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
-  .badge.on .dot{background:#35D07F}.badge.on{color:var(--text)}
-  .badge.warn .dot{background:var(--signal)}.badge.warn{color:var(--text)}
+        /* Шапка */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
 
-  .zoom{position:absolute;left:12px;bottom:150px;z-index:10;display:flex;flex-direction:column;gap:6px}
-  .zoom button,.locate{width:48px;height:48px;border-radius:12px;background:var(--panel);
-    border:1px solid var(--line);color:var(--text);font-size:24px;display:flex;align-items:center;
-    justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4)}
-  #tilt{font-size:14px;font-weight:800;letter-spacing:.02em}
-  #map.d3 #tilt{background:var(--signal);color:#1a1200;border-color:var(--signal)}
-  .locate{position:absolute;right:12px;bottom:150px;z-index:10;border-radius:50%;font-size:0}
-  .layers{position:absolute;right:12px;bottom:210px;z-index:10;width:48px;height:48px;border-radius:50%;
-    background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
-    cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4)}
-  .compass{position:absolute;right:12px;bottom:330px;z-index:10;width:48px;height:48px;border-radius:50%;
-    background:var(--panel);border:1px solid var(--line);display:none;align-items:center;justify-content:center;
-    cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4)}
-  .stylepop{position:absolute;right:70px;bottom:200px;z-index:12;display:none;flex-direction:column;
-    background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;
-    box-shadow:0 8px 24px rgba(0,0,0,.5)}
-  .stylepop.show{display:flex}
-  .stylepop button{border:none;background:none;color:var(--text);padding:11px 18px;font-size:14px;
-    text-align:left;cursor:pointer;border-bottom:1px solid var(--line);white-space:nowrap}
-  .stylepop button:last-child{border-bottom:none}
-  .stylepop button.active{color:var(--signal);font-weight:700}
-  .stylepop button:active{background:var(--line)}
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-  .dock{position:absolute;left:0;right:0;bottom:0;z-index:10;
-    padding:14px 12px calc(env(safe-area-inset-bottom) + 14px);
-    background:linear-gradient(rgba(14,17,22,0),#0E1116 40%)}
-  button.dl{width:100%;border:1px solid var(--signal);background:var(--signal);color:#1a1200;
-    padding:15px;border-radius:13px;font-size:15px;font-weight:700;display:flex;align-items:center;
-    justify-content:center;gap:8px;cursor:pointer;min-height:52px}
-  button.dl:active{transform:scale(.99)}button.dl:disabled{opacity:.55}
-  .prog{margin-top:10px;display:none}.prog.show{display:block}
-  .bar{height:8px;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
-  .bar>i{display:block;height:100%;width:0;background:var(--signal);transition:width .15s}
-  .lbl{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 20px;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(157, 0, 255, 0.4);
+        }
 
-  .searchbar{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 46px);z-index:11}
-  .srow{display:flex;gap:8px}
-  .srow input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--text);
-    padding:12px 14px;border-radius:12px;font-size:15px;outline:none;
-    box-shadow:0 4px 14px rgba(0,0,0,.35);-webkit-user-select:text;user-select:text}
-  .srow input::placeholder{color:var(--muted)}
-  .srow button{flex:0 0 auto;width:48px;border:1px solid var(--line);background:var(--panel);color:var(--text);
-    border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;
-    box-shadow:0 4px 14px rgba(0,0,0,.35)}
-  .results{margin-top:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
-    overflow:hidden;display:none;box-shadow:0 8px 24px rgba(0,0,0,.45)}
-  .results.show{display:block}
-  .results .r{padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer;font-size:14px;line-height:1.35}
-  .results .r:last-child{border-bottom:none}
-  .results .r:active{background:var(--line)}
-  .results .r b{display:block;font-weight:600}
-  .results .r span{color:var(--muted);font-size:12px}
-  .results .r.msg{color:var(--muted);cursor:default}
+        .brand-title {
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, #fff 0%, var(--neon-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-  .routebar{position:absolute;left:12px;right:12px;bottom:84px;z-index:11;display:none;
-    align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);
-    border-radius:13px;padding:11px 12px;box-shadow:0 6px 20px rgba(0,0,0,.45)}
-  .routebar.show{display:flex}
-  .rb-main{flex:1;min-width:0}
-  .rb-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .rb-meta{font-size:12px;color:var(--muted);margin-top:2px}
-  .routebar #rbClear{flex:0 0 auto;width:36px;height:36px;border-radius:10px;border:1px solid var(--line);
-    background:var(--bg);color:var(--text);font-size:16px;cursor:pointer}
-  #rbGo{flex:0 0 auto;background:var(--signal);color:#1a1200;border:1px solid var(--signal);
-    border-radius:10px;padding:9px 15px;font-weight:800;font-size:14px;cursor:pointer}
+        .brand-subtitle {
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
 
-  .navtop{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px);z-index:13;display:none;
-    background:#2a2f37;border:1px solid #3a414b;border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.55)}
-  .navtop.show{display:block}
-  .nt-main{display:flex;align-items:center;gap:14px}
-  #ntIcon{flex:0 0 auto;width:40px;height:40px;transition:transform .25s ease}
-  .nt-text{flex:1;min-width:0}
-  #ntPrimary{font-size:19px;font-weight:700;line-height:1.18}
-  #ntDist{font-size:13px;color:var(--signal);margin-top:3px;font-weight:700}
-  .nt-then{margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,.12);
-    font-size:13px;color:var(--muted);display:none}
-  .nt-then.show{display:block}
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--green);
+            background: rgba(0, 255, 136, 0.08);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
 
-  .navbot{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 12px);z-index:13;
-    display:none;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);
-    border-radius:16px;padding:12px 12px;box-shadow:0 -6px 20px rgba(0,0,0,.45)}
-  .navbot.show{display:flex}
-  .nb-cell{flex:1;text-align:center;display:flex;flex-direction:column}
-  .nb-cell b{font-size:20px;font-weight:800;line-height:1}
-  .nb-cell span{font-size:11px;color:var(--muted);margin-top:3px}
-  #nbStop{flex:0 0 auto;background:#FF5A4D;color:#fff;border:none;border-radius:11px;
-    padding:11px 14px;font-weight:700;font-size:13px;cursor:pointer}
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--green);
+        }
 
-  body.navon .searchbar,body.navon .routebar,body.navon .dock,body.navon .zoom,body.navon #asstBtn{display:none!important}
+        /* Форма вибору */
+        .form-group {
+            margin-bottom: 16px;
+        }
 
-  .sheetbg{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);display:none;align-items:flex-end}
-  .sheetbg.show{display:flex}
-  .asst{width:100%;background:var(--panel);border-top:1px solid var(--line);
-    border-top-left-radius:18px;border-top-right-radius:18px;
-    padding:16px 14px calc(env(safe-area-inset-bottom) + 14px);max-height:82vh;display:flex;flex-direction:column}
-  .ah{display:flex;align-items:center;margin-bottom:12px}
-  .ah b{font-size:17px;flex:1}
-  .ah button{width:32px;height:32px;border:none;background:none;color:var(--muted);font-size:16px;cursor:pointer}
-  .toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg);
-    border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:12px;cursor:pointer}
-  .toggle input{width:20px;height:20px;accent-color:var(--signal)}
-  .trackrow{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;
-    color:var(--muted);margin-bottom:12px;padding:0 2px}
-  .trackrow button{background:none;border:1px solid var(--line);color:var(--text);border-radius:9px;
-    padding:7px 12px;font-size:13px;cursor:pointer}
-  .msgs{flex:1;overflow:auto;min-height:50px;max-height:42vh;margin-bottom:10px;
-    display:flex;flex-direction:column;gap:8px}
-  .msg{padding:10px 12px;border-radius:13px;font-size:14px;line-height:1.45;max-width:86%;white-space:pre-wrap}
-  .msg.u{align-self:flex-end;background:var(--signal);color:#1a1200;border-bottom-right-radius:4px}
-  .msg.a{align-self:flex-start;background:var(--bg);border:1px solid var(--line);border-bottom-left-radius:4px}
-  .ain{display:flex;gap:8px}
-  .ain input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--text);
-    padding:12px;border-radius:11px;font-size:15px;-webkit-user-select:text;user-select:text}
-  .ain button{flex:0 0 auto;width:46px;border:1px solid var(--line);background:#1C232C;color:var(--text);
-    border-radius:11px;font-size:15px;cursor:pointer}
-  .ain #asstSend{background:var(--signal);color:#1a1200;border-color:var(--signal);font-weight:700}
-  .afoot{font-size:11px;color:var(--muted);margin-top:9px;text-align:center;line-height:1.4}
-  .afoot a{color:var(--signal);cursor:pointer;text-decoration:underline}
+        .form-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
 
-  .intro{position:fixed;inset:0;z-index:50;background:rgba(8,10,13,.88);backdrop-filter:blur(3px);
-    display:flex;align-items:center;justify-content:center;padding:24px}
-  .intro.hide{display:none}
-  .introcard{max-width:340px;width:100%;background:var(--panel);border:1px solid var(--line);
-    border-radius:18px;padding:24px;text-align:center}
-  .introbadge{width:54px;height:54px;border-radius:14px;background:var(--signal);color:#1a1200;
-    font-size:26px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
-  .introcard h2{margin:0 0 8px;font-size:20px}
-  .introcard p{margin:0 0 16px;color:var(--muted);font-size:14px;line-height:1.5}
-  .introcard ol{text-align:left;margin:0 0 20px;padding-left:22px;font-size:14px;line-height:1.8}
-  .introcard ol b{color:var(--signal)}
-  .introcard button{width:100%;border:1px solid var(--signal);background:var(--signal);color:#1a1200;
-    padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer}
-</style>
+        select {
+            width: 100%;
+            background: #090e17;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 14px 16px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:focus {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+        }
+
+        /* Кнопка аналізу */
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--neon-purple), #0066ff);
+            border: none;
+            color: #fff;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 25px rgba(157, 0, 255, 0.35);
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+            margin-top: 8px;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        /* Індикатор завантаження */
+        .loader-box {
+            display: none;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(0, 240, 255, 0.1);
+            border-top: 3px solid var(--neon-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loader-text {
+            font-size: 12px;
+            color: var(--neon-blue);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Блок сигналу */
+        .signal-card {
+            display: none;
+            margin-top: 20px;
+            background: rgba(9, 14, 23, 0.8);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .signal-icon-wrap {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            margin: 0 auto 12px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            border: 2px solid;
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        .signal-icon-wrap.up {
+            color: var(--green);
+            border-color: var(--green);
+            background: rgba(0, 255, 136, 0.08);
+        }
+
+        .signal-icon-wrap.down {
+            color: var(--red);
+            border-color: var(--red);
+            background: rgba(255, 42, 95, 0.08);
+        }
+
+        .signal-action {
+            font-size: 22px;
+            font-weight: 900;
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        .data-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-muted);
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+        }
+
+        .data-item span:last-child {
+            color: #fff;
+            font-weight: 700;
+        }
+    </style>
 </head>
 <body>
-  <div id="map">
-    <div id="scene">
-      <div id="tiles"></div>
-      <svg id="route" preserveAspectRatio="none"><path id="trailLine"/><path id="routeCasing"/><path id="routeLine"/><path id="routeFlow"/></svg>
-      <div id="cams"></div>
-      <div id="dest"></div>
-      <div id="me"><div id="meArrow"></div></div>
+
+    <div class="app-container">
+        <!-- Шапка -->
+        <div class="header">
+            <div class="brand">
+                <div class="brand-logo">D2</div>
+                <div>
+                    <div class="brand-title">DARK TRADING 2.0</div>
+                    <div class="brand-subtitle">AI Signal Core</div>
+                </div>
+            </div>
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                ONLINE
+            </div>
+        </div>
+
+        <!-- Вибір інструментів -->
+        <div class="form-group">
+            <label class="form-label">Валютна пара</label>
+            <select id="pairSelect">
+                <option value="AED/CNY OTC">AED/CNY OTC (+92%)</option>
+                <option value="AUD/CAD OTC">AUD/CAD OTC (+92%)</option>
+                <option value="AUD/CHF OTC">AUD/CHF OTC (+92%)</option>
+                <option value="AUD/NZD OTC">AUD/NZD OTC (+92%)</option>
+                <option value="AUD/USD OTC">AUD/USD OTC (+92%)</option>
+                <option value="CAD/CHF OTC">CAD/CHF OTC (+92%)</option>
+                <option value="CHF/NOK OTC">CHF/NOK OTC (+92%)</option>
+                <option value="EUR/CHF OTC">EUR/CHF OTC (+92%)</option>
+                <option value="EUR/HUF OTC">EUR/HUF OTC (+92%)</option>
+                <option value="EUR/JPY OTC">EUR/JPY OTC (+92%)</option>
+                <option value="EUR/NZD OTC">EUR/NZD OTC (+92%)</option>
+                <option value="GBP/JPY OTC">GBP/JPY OTC (+92%)</option>
+                <option value="GBP/USD OTC">GBP/USD OTC (+92%)</option>
+                <option value="JOD/CNY OTC">JOD/CNY OTC (+92%)</option>
+                <option value="LBP/USD OTC">LBP/USD OTC (+92%)</option>
+                <option value="MAD/USD OTC">MAD/USD OTC (+92%)</option>
+                <option value="OMR/CNY OTC">OMR/CNY OTC (+92%)</option>
+                <option value="SAR/CNY OTC">SAR/CNY OTC (+92%)</option>
+                <option value="UAH/USD OTC">UAH/USD OTC (+92%)</option>
+                <option value="USD/CAD OTC">USD/CAD OTC (+92%)</option>
+                <option value="USD/MXN OTC">USD/MXN OTC (+92%)</option>
+                <option value="USD/MYR OTC">USD/MYR OTC (+92%)</option>
+                <option value="USD/PKR OTC">USD/PKR OTC (+92%)</option>
+                <option value="USD/THB OTC">USD/THB OTC (+92%)</option>
+                <option value="USD/VND OTC">USD/VND OTC (+92%)</option>
+                <option value="YER/USD OTC">YER/USD OTC (+92%)</option>
+                <option value="CAD/CHF">CAD/CHF (+91%)</option>
+                <option value="EUR/CAD">EUR/CAD (+91%)</option>
+                <option value="GBP/CHF">GBP/CHF (+91%)</option>
+                <option value="AUD/JPY">AUD/JPY (+90%)</option>
+                <option value="AUD/JPY OTC">AUD/JPY OTC (+90%)</option>
+                <option value="EUR/GBP OTC">EUR/GBP OTC (+89%)</option>
+                <option value="USD/CNH OTC">USD/CNH OTC (+89%)</option>
+                <option value="USD/DZD OTC">USD/DZD OTC (+89%)</option>
+                <option value="CHF/JPY">CHF/JPY (+86%)</option>
+                <option value="CAD/JPY OTC">CAD/JPY OTC (+85%)</option>
+                <option value="USD/JPY OTC">USD/JPY OTC (+85%)</option>
+                <option value="KES/USD OTC">KES/USD OTC (+84%)</option>
+                <option value="USD/CHF">USD/CHF (+84%)</option>
+                <option value="NGN/USD OTC">NGN/USD OTC (+83%)</option>
+                <option value="CAD/JPY">CAD/JPY (+82%)</option>
+                <option value="EUR/TRY OTC">EUR/TRY OTC (+81%)</option>
+                <option value="GBP/CAD">GBP/CAD (+81%)</option>
+                <option value="CHF/JPY OTC">CHF/JPY OTC (+79%)</option>
+                <option value="EUR/AUD">EUR/AUD (+78%)</option>
+                <option value="USD/PHP OTC">USD/PHP OTC (+77%)</option>
+                <option value="EUR/JPY">EUR/JPY (+76%)</option>
+                <option value="GBP/AUD">GBP/AUD (+76%)</option>
+                <option value="BHD/CNY OTC">BHD/CNY OTC (+75%)</option>
+                <option value="GBP/AUD OTC">GBP/AUD OTC (+75%)</option>
+                <option value="ZAR/USD OTC">ZAR/USD OTC (+75%)</option>
+                <option value="AUD/USD">AUD/USD (+74%)</option>
+                <option value="EUR/CHF">EUR/CHF (+71%)</option>
+                <option value="EUR/GBP">EUR/GBP (+71%)</option>
+                <option value="GBP/JPY">GBP/JPY (+71%)</option>
+                <option value="USD/CLP OTC">USD/CLP OTC (+70%)</option>
+                <option value="USD/BDT OTC">USD/BDT OTC (+69%)</option>
+                <option value="USD/IDR OTC">USD/IDR OTC (+68%)</option>
+                <option value="USD/EGP OTC">USD/EGP OTC (+64%)</option>
+                <option value="EUR/USD OTC">EUR/USD OTC (+63%)</option>
+                <option value="GBP/USD">GBP/USD (+62%)</option>
+                <option value="EUR/USD">EUR/USD (+59%)</option>
+                <option value="USD/INR OTC">USD/INR OTC (+59%)</option>
+                <option value="USD/SGD OTC">USD/SGD OTC (+57%)</option>
+                <option value="QAR/CNY OTC">QAR/CNY OTC (+56%)</option>
+                <option value="NZD/USD OTC">NZD/USD OTC (+54%)</option>
+                <option value="AUD/CAD">AUD/CAD (+46%)</option>
+                <option value="USD/ARS OTC">USD/ARS OTC (+43%)</option>
+                <option value="USD/BRL OTC">USD/BRL OTC (+41%)</option>
+                <option value="TND/USD OTC">TND/USD OTC (+39%)</option>
+                <option value="AUD/CHF">AUD/CHF (+38%)</option>
+                <option value="USD/JPY">USD/JPY (+38%)</option>
+                <option value="USD/CHF OTC">USD/CHF OTC (+33%)</option>
+                <option value="USD/CAD">USD/CAD (+32%)</option>
+                <option value="NZD/JPY OTC">NZD/JPY OTC</option>
+                <option value="USD/COP OTC">USD/COP OTC</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Час експірації</label>
+            <select id="tfSelect">
+                <option value="M1 (1 хвилини)">M1 (1 хвилина)</option>
+                <option value="M3 (3 хвилини)">M3 (3 хвилини)</option>
+                <option value="M5 (5 хвилин)">M5 (5 хвилин)</option>
+            </select>
+        </div>
+
+        <button class="btn-submit" onclick="generateSignal()">⚡ Отримати сигнал</button>
+
+        <!-- Лоадер -->
+        <div class="loader-box" id="loader">
+            <div class="spinner"></div>
+            <div class="loader-text">ШІ аналізує тренд та свічкові паттерни...</div>
+        </div>
+
+        <!-- Результат -->
+        <div class="signal-card" id="signalCard">
+            <div class="signal-icon-wrap up" id="signalIcon">⬆</div>
+            <div class="signal-action" id="signalText" style="color: var(--green);">ВВЕРХ (CALL)</div>
+
+            <div class="data-list">
+                <div class="data-item">
+                    <span>Актив:</span>
+                    <span id="resPair">AED/CNY OTC</span>
+                </div>
+                <div class="data-item">
+                    <span>Точність алгоритму:</span>
+                    <span id="resConfidence" style="color: var(--neon-blue);">91%</span>
+                </div>
+                <div class="data-item">
+                    <span>Час угоди:</span>
+                    <span id="resTimeframe">M1</span>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="sky" id="sky"></div>
-    <div class="attrib">© <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div>
-  </div>
 
-  <header>
-    <div class="badge" id="bGps"><span class="dot"></span><span>GPS</span></div>
-    <div class="badge" id="bNet"><span class="dot"></span><span>офлайн</span></div>
-    <div class="badge" id="bMap"><span class="dot"></span><span>0 плиток</span></div>
-  </header>
+    <script>
+        function generateSignal() {
+            document.getElementById('signalCard').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
 
-  <div class="searchbar">
-    <div class="srow">
-      <input id="q" type="search" placeholder="Куди їхати? Адреса…" autocomplete="off" enterkeyhint="search" />
-      <button id="qbtn" title="Знайти">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-      </button>
-    </div>
-    <div id="results" class="results"></div>
-  </div>
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
 
-  <div class="routebar" id="routebar">
-    <div class="rb-main">
-      <div class="rb-name" id="rbName">—</div>
-      <div class="rb-meta" id="rbMeta">—</div>
-    </div>
-    <button id="rbGo" title="Почати навігацію">Поїхали</button>
-    <button id="rbClear" title="Скинути маршрут">✕</button>
-  </div>
+                const isUp = Math.random() > 0.48;
+                const pair = document.getElementById('pairSelect').value;
+                const tf = document.getElementById('tfSelect').value;
+                const confidence = Math.floor(Math.random() * 12) + 85;
 
-  <div class="navtop" id="navTop">
-    <div class="nt-main">
-      <svg id="ntIcon" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V5M12 5l-6 6M12 5l6 6"/></svg>
-      <div class="nt-text"><div id="ntPrimary">—</div><div id="ntDist">—</div></div>
-    </div>
-    <div class="nt-then" id="ntThen"></div>
-  </div>
+                const icon = document.getElementById('signalIcon');
+                const text = document.getElementById('signalText');
 
-  <div class="navbot" id="navBot">
-    <div class="nb-cell"><b id="nbEta">—</b><span>прибуття</span></div>
-    <div class="nb-cell"><b id="nbMin">—</b><span>хв</span></div>
-    <div class="nb-cell"><b id="nbKm">—</b><span>км</span></div>
-    <button id="nbStop">Завершити</button>
-  </div>
+                if (isUp) {
+                    icon.className = 'signal-icon-wrap up';
+                    icon.innerText = '⬆';
+                    text.innerText = 'ВВЕРХ (CALL)';
+                    text.style.color = 'var(--green)';
+                } else {
+                    icon.className = 'signal-icon-wrap down';
+                    icon.innerText = '⬇';
+                    text.innerText = 'ВНИЗ (PUT)';
+                    text.style.color = 'var(--red)';
+                }
 
-  <div class="zoom">
-    <button id="zin">+</button>
-    <button id="zout">−</button>
-    <button id="tilt" title="3D / 2D">3D</button>
-  </div>
-  <div class="locate" id="locate" title="До мене">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8EDF2" stroke-width="2">
-      <circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
-  </div>
-  <div class="compass" id="compass" title="Повернути на північ">
-    <svg id="compassNeedle" viewBox="0 0 24 24" width="26" height="26">
-      <path d="M12 3 L8.5 13 L12 11 L15.5 13 Z" fill="#FF5A4D"/>
-      <path d="M12 21 L8.5 13 L12 15 L15.5 13 Z" fill="#8B97A4"/></svg>
-  </div>
-  <div class="layers" id="layersBtn" title="Стиль карти">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8EDF2" stroke-width="2">
-      <path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M2 13l10 5 10-5M2 18l10 5 10-5" opacity=".55"/></svg>
-  </div>
-  <div class="stylepop" id="stylePop">
-    <button data-s="dark">Темна</button>
-    <button data-s="light">Світла</button>
-    <button data-s="sat">Супутник</button>
-  </div>
-  <div class="layers" id="asstBtn" style="bottom:270px" title="Помічник">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8EDF2" stroke-width="2">
-      <rect x="3" y="8" width="18" height="12" rx="3"/><path d="M12 8V4M8 14h.01M16 14h.01"/></svg>
-  </div>
+                document.getElementById('resPair').innerText = pair.split(' (')[0];
+                document.getElementById('resTimeframe').innerText = tf;
+                document.getElementById('resConfidence').innerText = `${confidence}%`;
 
-  <div class="sheetbg" id="asstBg">
-    <div class="asst">
-      <div class="ah"><b>Помічник</b><button id="asstClose">✕</button></div>
-      <label class="toggle"><span>🔊 Озвучувати маршрут</span><input type="checkbox" id="voiceChk" /></label>
-      <div class="trackrow"><span id="trackInfo">Записаний шлях: порожньо</span><button id="trackClear">Очистити</button></div>
-      <div class="msgs" id="asstMsgs"></div>
-      <div class="ain">
-        <input id="asstInput" type="text" placeholder="Спитати помічника…" autocomplete="off" />
-        <button id="asstMic" title="Говорити">🎤</button>
-        <button id="asstSend" title="Надіслати">➤</button>
-      </div>
-      <div class="afoot" id="asstFoot"></div>
-    </div>
-  </div>
-
-  <div class="dock">
-    <button class="dl" id="dl">
-      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>
-      <span id="dlText">Завантажити / оновити район</span>
-    </button>
-    <div class="prog" id="prog"><div class="bar"><i id="bar"></i></div><div class="lbl" id="plbl">0%</div></div>
-  </div>
-
-<div class="intro" id="intro">
-  <div class="introcard">
-    <div class="introbadge">▲</div>
-    <h2>Підготуй мапу до тривоги</h2>
-    <p>Зроби це раз, поки є інтернет. Під час тривоги мережа не потрібна — GPS веде тебе по збереженій мапі.</p>
-    <ol>
-      <li>Дозволь доступ до геолокації</li>
-      <li>Знайди свій район і натисни <b>«Завантажити / оновити район»</b></li>
-    </ol>
-    <button id="introGo">Дозволити геолокацію</button>
-  </div>
-</div>
-
-<script>
-'use strict';
-const TILE=256, MINZ=3, MAXZ=19;
-function sub(x,y){return ['a','b','c','d'][(((x+y)%4)+4)%4];}
-const STYLES={
-  dark:{name:'Темна',  attr:'© OpenStreetMap, © CARTO',
-        url:(z,x,y)=>`https://${sub(x,y)}.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}@2x.png`},
-  light:{name:'Світла',attr:'© OpenStreetMap, © CARTO',
-        url:(z,x,y)=>`https://${sub(x,y)}.basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}@2x.png`},
-  sat:{name:'Супутник',attr:'© Esri, Maxar, Earthstar Geographics',
-        url:(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`}
-};
-let style=localStorage.getItem('style'); if(!STYLES[style])style='dark';
-const TILE_URL=(z,x,y)=>STYLES[style].url(z,x,y);
-const DL_ZOOMS=[14,15,16,17], DL_CAP=2500, KYIV={lat:50.4501,lng:30.5234};
-
-/* ---------- проекція Web Mercator ---------- */
-function project(lat,lng,z){const s=TILE*2**z;
-  const x=(lng+180)/360*s;
-  const sin=Math.sin(lat*Math.PI/180);
-  const y=(0.5-Math.log((1+sin)/(1-sin))/(4*Math.PI))*s;
-  return {x,y};}
-function unproject(x,y,z){const s=TILE*2**z;
-  const lng=x/s*360-180;
-  const n=Math.PI-2*Math.PI*y/s;
-  const lat=180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n)));
-  return {lat,lng};}
-
-/* напрямок руху: азимут від мене до точки попереду по маршруту (0°=північ) */
-function bearingDeg(la1,ln1,la2,ln2){
-  const f1=la1*Math.PI/180,f2=la2*Math.PI/180,dl=(ln2-ln1)*Math.PI/180;
-  const y=Math.sin(dl)*Math.cos(f2);
-  const x=Math.cos(f1)*Math.sin(f2)-Math.sin(f1)*Math.cos(f2)*Math.cos(dl);
-  return (Math.atan2(y,x)*180/Math.PI+360)%360;
-}
-function headingToFollow(){
-  if(!mePos)return null;
-  if(routeCoords.length>1){
-    const z=zoom, me=project(mePos.lat,mePos.lng,z);
-    let bi=0,bd=Infinity;
-    for(let i=0;i<routeCoords.length;i++){const p=project(routeCoords[i][0],routeCoords[i][1],z);
-      const d=(p.x-me.x)**2+(p.y-me.y)**2; if(d<bd){bd=d;bi=i;}}
-    let acc=0,target=routeCoords[routeCoords.length-1],prev=project(routeCoords[bi][0],routeCoords[bi][1],z);
-    for(let i=bi+1;i<routeCoords.length;i++){const p=project(routeCoords[i][0],routeCoords[i][1],z);
-      acc+=Math.hypot(p.x-prev.x,p.y-prev.y);prev=p;
-      if(acc>=70){target=routeCoords[i];break;}}
-    return bearingDeg(mePos.lat,mePos.lng,target[0],target[1]);
-  }
-  if(destination)return bearingDeg(mePos.lat,mePos.lng,destination.lat,destination.lng);
-  return null;
-}
-function distM(la1,ln1,la2,ln2){const R=6371000,r=Math.PI/180;
-  const dLa=(la2-la1)*r,dLn=(ln2-ln1)*r;
-  const x=Math.sin(dLa/2)**2+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dLn/2)**2;
-  return 2*R*Math.asin(Math.sqrt(x));}
-function compassUA(d){return ['північ','північний схід','схід','південний схід',
-  'південь','південний захід','захід','північний захід'][Math.round(d/45)%8];}
-function remainingMeters(){
-  if(!mePos)return 0;
-  if(routeCoords.length>1){
-    const z=zoom,me=project(mePos.lat,mePos.lng,z);
-    let bi=0,bd=Infinity;
-    for(let i=0;i<routeCoords.length;i++){const p=project(routeCoords[i][0],routeCoords[i][1],z);
-      const d=(p.x-me.x)**2+(p.y-me.y)**2;if(d<bd){bd=d;bi=i;}}
-    let m=distM(mePos.lat,mePos.lng,routeCoords[bi][0],routeCoords[bi][1]);
-    for(let i=bi+1;i<routeCoords.length;i++)m+=distM(routeCoords[i-1][0],routeCoords[i-1][1],routeCoords[i][0],routeCoords[i][1]);
-    return m;
-  }
-  if(destination)return distM(mePos.lat,mePos.lng,destination.lat,destination.lng);
-  return 0;
-}
-
-/* ---------- IndexedDB для плиток ---------- */
-const DB='offmap',STORE='tiles';
-function idb(){return new Promise((res,rej)=>{const r=indexedDB.open(DB,1);
-  r.onupgradeneeded=()=>r.result.createObjectStore(STORE);
-  r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
-async function getTile(k){const d=await idb();return new Promise((res)=>{
-  const r=d.transaction(STORE).objectStore(STORE).get(k);
-  r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null);});}
-async function putTile(k,blob){const d=await idb();return new Promise((res)=>{
-  const t=d.transaction(STORE,'readwrite');t.objectStore(STORE).put(blob,k);
-  t.oncomplete=()=>res();t.onerror=()=>res();});}
-async function countTiles(){const d=await idb();return new Promise((res)=>{
-  const r=d.transaction(STORE).objectStore(STORE).count();
-  r.onsuccess=()=>res(r.result||0);r.onerror=()=>res(0);});}
-
-/* ---------- стан мапи ---------- */
-const saved=JSON.parse(localStorage.getItem('view')||'null');
-let center=saved?{lat:saved.lat,lng:saved.lng}:KYIV;
-let zoom=saved?saved.z:13;
-let bearing=saved&&saved.b?saved.b:0;   // ручний поворот карти, градуси
-let displayRot=0;                        // фактичний кут сцени (для жестів)
-let smoothBearing=0,targetBearing=0,navTargetC=null,navRAF=0;
-let compassBtn=null,compassNeedle=null;
-let W=innerWidth,H=innerHeight;
-const mapEl=document.getElementById('map'),tilesEl=document.getElementById('tiles'),meEl=document.getElementById('me');
-const meArrowEl=document.getElementById('meArrow');
-const destEl=document.getElementById('dest'),routeSvg=document.getElementById('route'),routeLineEl=document.getElementById('routeLine');
-const routeCasingEl=document.getElementById('routeCasing'),routeFlowEl=document.getElementById('routeFlow');
-const trailLineEl=document.getElementById('trailLine');
-let track=[];   // записаний шлях [[lat,lng],...]
-let destination=null;   // {lat,lng,name}
-let routeCoords=[];     // [[lat,lng],...]
-let cameras=[];         // [{lat,lng}]
-let camEls=[];
-let d3=localStorage.getItem('d3')==='1';
-let steps=[], totalDist=0, totalDur=0, navMode=false, stepIndex=0;
-const sceneEl=document.getElementById('scene'),camsEl=document.getElementById('cams');
-
-const urlCache=new Map();      // key -> objectURL
-const tileNodes=new Map();     // key -> img element
-function tileKey(z,x,y){return style+'/'+z+'/'+x+'/'+y;}
-
-function loadTileSrc(img,z,x,y){
-  const key=tileKey(z,x,y);
-  if(urlCache.has(key)){img.src=urlCache.get(key);return;}
-  getTile(key).then(blob=>{
-    if(blob){const u=URL.createObjectURL(blob);urlCache.set(key,u);img.src=u;return;}
-    if(navigator.onLine){
-      fetch(TILE_URL(z,x,y)).then(r=>r.ok?r.blob():null).then(b=>{
-        if(!b)return; putTile(key,b);
-        const u=URL.createObjectURL(b);urlCache.set(key,u);
-        if(img.isConnected)img.src=u;
-      }).catch(()=>{ if(img.isConnected)img.src=TILE_URL(z,x,y); });
-    }
-  });
-}
-
-let rafPending=false;
-function requestRender(){if(rafPending)return;rafPending=true;requestAnimationFrame(()=>{rafPending=false;render();});}
-
-function render(){
-  W=innerWidth;H=innerHeight;
-  const c=project(center.lat,center.lng,zoom);
-  const originX=c.x-W/2, originY=c.y-H/2;
-  const max=2**zoom;
-  const rotated=navMode||Math.abs(bearing)>0.5;
-  const mTop=d3?H*1.4:(rotated?H*0.7:0), mSide=(d3||rotated)?W*0.7:0, mBot=(d3||rotated)?H*0.5:0;
-  const x0=Math.floor((originX-mSide)/TILE), x1=Math.floor((originX+W+mSide)/TILE);
-  const y0=Math.floor((originY-mTop)/TILE), y1=Math.floor((originY+H+mBot)/TILE);
-
-  const need=new Set();
-  for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++){
-    if(y<0||y>=max)continue;
-    const wx=((x%max)+max)%max;                 // горизонтальне «обгортання»
-    const key=tileKey(zoom,wx,y);
-    need.add(key);
-    let img=tileNodes.get(key);
-    if(!img){img=new Image();img.decoding='async';img.style.opacity='0';
-      img.onload=()=>{img.style.opacity='1';};
-      tileNodes.set(key,img);tilesEl.appendChild(img);loadTileSrc(img,zoom,wx,y);}
-    img.style.left=(x*TILE-originX)+'px';
-    img.style.top =(y*TILE-originY)+'px';
-  }
-  // прибрати зайві
-  for(const [key,img] of tileNodes){
-    if(need.has(key)){if(img._rm){clearTimeout(img._rm);img._rm=0;}}
-    else if(!img._rm){img._rm=setTimeout(()=>{img.remove();tileNodes.delete(key);},600);}
-  }
-
-  // записаний шлях (де ти вже проїхав)
-  if(track.length>1){
-    let td='';
-    for(let i=0;i<track.length;i++){const p=project(track[i][0],track[i][1],zoom);
-      td+=(i?'L':'M')+(p.x-originX).toFixed(1)+' '+(p.y-originY).toFixed(1)+' ';}
-    trailLineEl.setAttribute('d',td);
-  }else trailLineEl.setAttribute('d','');
-
-  // маршрут
-  if(routeCoords.length>1){
-    let d='';
-    for(let i=0;i<routeCoords.length;i++){const p=project(routeCoords[i][0],routeCoords[i][1],zoom);
-      d+=(i?'L':'M')+(p.x-originX).toFixed(1)+' '+(p.y-originY).toFixed(1)+' ';}
-    routeCasingEl.setAttribute('d',d);routeLineEl.setAttribute('d',d);routeFlowEl.setAttribute('d',d);
-  }else{routeCasingEl.setAttribute('d','');routeLineEl.setAttribute('d','');routeFlowEl.setAttribute('d','');}
-
-  // точка Б
-  if(destination){const p=project(destination.lat,destination.lng,zoom);
-    destEl.style.left=(p.x-originX)+'px';destEl.style.top=(p.y-originY)+'px';destEl.style.display='block';}
-  else destEl.style.display='none';
-
-  // камери швидкості
-  for(let i=0;i<cameras.length;i++){const el=camEls[i];if(!el)continue;
-    const p=project(cameras[i].lat,cameras[i].lng,zoom);
-    el.style.left=(p.x-originX)+'px';el.style.top=(p.y-originY)+'px';}
-
-  // GPS-крапка + стрілка напрямку
-  const hd=headingToFollow();
-  if(mePos){const p=project(mePos.lat,mePos.lng,zoom);
-    meEl.style.left=(p.x-originX)+'px';meEl.style.top=(p.y-originY)+'px';meEl.style.display='block';
-    if(hd!=null){meEl.style.transform='rotate('+hd.toFixed(1)+'deg)';meArrowEl.style.display='block';}
-    else{meEl.style.transform='none';meArrowEl.style.display='none';}
-  }
-
-  // нахил (3D) + поворот: за курсом у навігації (плавно), або ручний
-  const pitch=d3?54:0;
-  const rot=navMode?smoothBearing:bearing;
-  displayRot=rot;
-  sceneEl.style.transform=`rotateX(${pitch}deg) rotate(${rot.toFixed(2)}deg)`;
-  if(compassBtn)compassBtn.style.display=(!navMode&&Math.abs(((rot%360)+360)%360)>0.5)?'flex':'none';
-  if(compassNeedle)compassNeedle.style.transform='rotate('+(-rot).toFixed(1)+'deg)';
-
-  localStorage.setItem('view',JSON.stringify({lat:center.lat,lng:center.lng,z:zoom,b:bearing}));
-}
-function clearTiles(){for(const [,img] of tileNodes){if(img._rm)clearTimeout(img._rm);img.remove();}tileNodes.clear();}
-
-/* ---------- зум зі збереженням точки під курсором ---------- */
-function zoomTo(nz,sx,sy){
-  nz=Math.max(MINZ,Math.min(MAXZ,Math.round(nz)));
-  if(nz===zoom)return;
-  const off=screenToWorld(sx-W/2,sy-H/2);       // зміщення з урахуванням повороту
-  const c=project(center.lat,center.lng,zoom);
-  const ll=unproject(c.x+off.x,c.y+off.y,zoom);  // точка під пальцем
-  zoom=nz;
-  const np=project(ll.lat,ll.lng,zoom);
-  center=unproject(np.x-off.x,np.y-off.y,zoom);  // тримаємо її на місці
-  clearTiles();render();
-}
-document.getElementById('zin').onclick=()=>zoomTo(zoom+1,W/2,H/2);
-document.getElementById('zout').onclick=()=>zoomTo(zoom-1,W/2,H/2);
-const tiltBtn=document.getElementById('tilt');
-function applyTilt(){mapEl.classList.toggle('d3',d3);tiltBtn.textContent=d3?'2D':'3D';clearTiles();render();}
-tiltBtn.onclick=()=>{d3=!d3;localStorage.setItem('d3',d3?'1':'0');applyTilt();};
-mapEl.addEventListener('wheel',e=>{e.preventDefault();zoomTo(zoom+(e.deltaY<0?1:-1),e.clientX,e.clientY);},{passive:false});
-let lastTap=0;
-mapEl.addEventListener('dblclick',e=>zoomTo(zoom+1,e.clientX,e.clientY));
-
-/* ---------- панорамування + пінч ---------- */
-const pts=new Map();let panStart=null,pinchStart=null;
-function screenToWorld(dx,dy){           // екранне зміщення → світове з урахуванням повороту
-  const a=-displayRot*Math.PI/180;
-  return {x:dx*Math.cos(a)-dy*Math.sin(a), y:dx*Math.sin(a)+dy*Math.cos(a)};
-}
-mapEl.addEventListener('pointerdown',e=>{mapEl.setPointerCapture(e.pointerId);
-  pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(pts.size===1){mapEl.classList.add('drag');
-    panStart={x:e.clientX,y:e.clientY,c:project(center.lat,center.lng,zoom)};
-    const now=Date.now();if(now-lastTap<300){zoomTo(zoom+1,e.clientX,e.clientY);}lastTap=now;
-  }else if(pts.size===2){const a=[...pts.values()];
-    pinchStart={dist:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),zoom,bearing,
-      ang:Math.atan2(a[1].y-a[0].y,a[1].x-a[0].x),
-      mid:{x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2},c:project(center.lat,center.lng,zoom)};panStart=null;}
-});
-mapEl.addEventListener('pointermove',e=>{
-  if(!pts.has(e.pointerId))return;
-  pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(pts.size===1&&panStart){
-    const wd=screenToWorld(e.clientX-panStart.x, e.clientY-panStart.y);
-    center=unproject(panStart.c.x-wd.x,panStart.c.y-wd.y,zoom);
-    requestRender();
-  }else if(pts.size===2&&pinchStart){
-    const a=[...pts.values()];
-    if(!navMode){                         // обертання карти двома пальцями
-      const ang=Math.atan2(a[1].y-a[0].y,a[1].x-a[0].x);
-      bearing=pinchStart.bearing+(ang-pinchStart.ang)*180/Math.PI;
-    }
-    const mid={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2};
-    const wd=screenToWorld(mid.x-pinchStart.mid.x, mid.y-pinchStart.mid.y);
-    center=unproject(pinchStart.c.x-wd.x,pinchStart.c.y-wd.y,zoom);
-    requestRender();
-  }
-});
-function endPointer(e){
-  if(pinchStart&&pts.size===2){
-    const a=[...pts.values()];
-    const dist=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);
-    const nz=pinchStart.zoom+Math.log2(dist/pinchStart.dist);
-    zoomTo(nz,W/2,H/2);
-  }
-  pts.delete(e.pointerId);
-  if(pts.size<2)pinchStart=null;
-  if(pts.size===0){mapEl.classList.remove('drag');panStart=null;}
-}
-mapEl.addEventListener('pointerup',endPointer);
-mapEl.addEventListener('pointercancel',endPointer);
-addEventListener('resize',requestRender);
-compassBtn=document.getElementById('compass');
-compassNeedle=document.getElementById('compassNeedle');
-compassBtn.onclick=()=>{bearing=0;render();};
-
-/* ---------- GPS ---------- */
-let mePos=null,firstFix=true,watchId=null;const bGps=document.getElementById('bGps');
-function onPos(p){
-  mePos={lat:p.coords.latitude,lng:p.coords.longitude};bGps.className='badge on';
-  if(firstFix&&!saved){firstFix=false;center={...mePos};if(zoom<15)zoom=15;clearTiles();}
-  recordTrack();
-  if(navMode){updateNav();checkCameras();}
-  else{render();navVoice();checkCameras();}
-}
-function onPosErr(){bGps.className='badge warn';}
-function startWatch(){
-  if(watchId!=null||!('geolocation' in navigator))return;
-  watchId=navigator.geolocation.watchPosition(onPos,onPosErr,{enableHighAccuracy:true,maximumAge:2000,timeout:15000});
-}
-function requestLocation(){           // явний запит дозволу (через дотик — надійно для iOS)
-  if(!('geolocation' in navigator)){onPosErr();return;}
-  navigator.geolocation.getCurrentPosition(onPos,onPosErr,{enableHighAccuracy:true,timeout:15000});
-  startWatch();
-}
-startWatch();
-bGps.style.cursor='pointer';
-bGps.onclick=requestLocation;          // тапни «GPS», щоб надати доступ
-document.getElementById('locate').onclick=()=>{
-  if(mePos){center={...mePos};if(zoom<16)zoom=16;clearTiles();render();}else requestLocation();
-};
-
-/* ---------- стиль карти ---------- */
-const attribEl=document.querySelector('.attrib');
-function setAttrib(){attribEl.textContent=STYLES[style].attr;}
-const layersBtn=document.getElementById('layersBtn'),stylePop=document.getElementById('stylePop');
-function markActive(){stylePop.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.s===style));}
-layersBtn.onclick=e=>{e.stopPropagation();stylePop.classList.toggle('show');markActive();};
-stylePop.querySelectorAll('button').forEach(b=>b.onclick=()=>{
-  style=b.dataset.s;localStorage.setItem('style',style);
-  stylePop.classList.remove('show');markActive();setAttrib();clearTiles();render();refreshCount();
-});
-document.addEventListener('click',e=>{if(!stylePop.contains(e.target)&&e.target!==layersBtn)stylePop.classList.remove('show');});
-setAttrib();
-
-/* ---------- мережа + лічильник ---------- */
-const bNet=document.getElementById('bNet'),bMap=document.getElementById('bMap');
-function netUI(){const on=navigator.onLine;bNet.className='badge '+(on?'on':'warn');
-  bNet.querySelector('span:last-child').textContent=on?'онлайн':'офлайн';}
-addEventListener('online',netUI);addEventListener('offline',netUI);netUI();
-async function refreshCount(){const n=await countTiles();
-  bMap.querySelector('span:last-child').textContent=n+' плиток';bMap.className='badge '+(n>0?'on':'');}
-
-/* ---------- завантаження району ---------- */
-function tilesForView(){
-  const c=project(center.lat,center.lng,zoom);
-  const tl=unproject(c.x-W/2,c.y-H/2,zoom), br=unproject(c.x+W/2,c.y+H/2,zoom);
-  const list=[];
-  for(const z of DL_ZOOMS){const s=2**z;
-    const x0=Math.floor((tl.lng+180)/360*s), x1=Math.floor((br.lng+180)/360*s);
-    const yT=lat2y(tl.lat,z), yB=lat2y(br.lat,z);
-    for(let x=Math.min(x0,x1);x<=Math.max(x0,x1);x++)
-      for(let y=Math.min(yT,yB);y<=Math.max(yT,yB);y++)
-        if(x>=0&&y>=0&&x<s&&y<s)list.push([z,x,y]);
-  }
-  return list;
-}
-function lat2y(lat,z){const r=lat*Math.PI/180;
-  return Math.floor((1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*2**z);}
-
-const dlBtn=document.getElementById('dl'),dlText=document.getElementById('dlText'),
-      prog=document.getElementById('prog'),bar=document.getElementById('bar'),plbl=document.getElementById('plbl');
-dlBtn.onclick=async()=>{
-  if(!navigator.onLine){alert('Немає інтернету. Спершу під'+"'"+'єднайся, щоб завантажити район.');return;}
-  const list=tilesForView();
-  if(list.length>DL_CAP){alert(`Область завелика: ${list.length} плиток (ліміт ${DL_CAP}). Наблизь карту ближче.`);return;}
-  dlBtn.disabled=true;dlText.textContent='Завантаження…';prog.classList.add('show');
-  let done=0;const total=list.length,CONC=6,q=list.slice();
-  async function worker(){while(q.length){const [z,x,y]=q.pop();const key=tileKey(z,x,y);
-    try{const r=await fetch(TILE_URL(z,x,y),{cache:'reload'});if(r.ok)await putTile(key,await r.blob());}catch{}
-    done++;const p=Math.round(done/total*100);bar.style.width=p+'%';plbl.textContent=`${p}% (${done}/${total})`;}}
-  await Promise.all(Array.from({length:CONC},worker));
-  plbl.textContent=`Готово ✓ ${total} плиток. Шукаю камери…`;
-  const cams=await fetchCameras();
-  plbl.textContent=`Готово ✓ ${total} плиток`+(cams?`, +${cams} камер`:'')+` збережено офлайн`;
-  dlBtn.disabled=false;dlText.textContent='Завантажити / оновити район';refreshCount();render();
-};
-
-/* ---------- маршрут А→Б ---------- */
-const GEOCODE='https://nominatim.openstreetmap.org/search';
-const ROUTER='https://router.project-osrm.org/route/v1/driving/';
-const qEl=document.getElementById('q'),qbtn=document.getElementById('qbtn'),resultsEl=document.getElementById('results');
-const routebar=document.getElementById('routebar'),rbName=document.getElementById('rbName'),rbMeta=document.getElementById('rbMeta');
-const rbGo=document.getElementById('rbGo'),navTop=document.getElementById('navTop'),navBot=document.getElementById('navBot'),
-      ntIcon=document.getElementById('ntIcon'),ntPrimary=document.getElementById('ntPrimary'),ntDist=document.getElementById('ntDist'),
-      ntThen=document.getElementById('ntThen'),nbEta=document.getElementById('nbEta'),nbMin=document.getElementById('nbMin'),
-      nbKm=document.getElementById('nbKm'),nbStop=document.getElementById('nbStop');
-
-function dirWord(m){return {'left':'ліворуч','right':'праворуч','slight left':'трохи ліворуч','slight right':'трохи праворуч',
-  'sharp left':'різко ліворуч','sharp right':'різко праворуч'}[m]||'';}
-function uaManeuver(s){
-  const t=s.maneuver?.type||'',m=s.maneuver?.modifier||'',name=s.name||'';
-  const on=name?(' на '+name):'',along=name?(' по '+name):'';
-  if(t==='depart')return 'Рушайте'+along;
-  if(t==='arrive')return 'Прибуття до місця';
-  if(t==='turn')return 'Поверніть '+dirWord(m)+on;
-  if(t==='end of road')return 'У кінці дороги — '+dirWord(m)+on;
-  if(t==='fork')return 'На розвилці тримайтесь '+(m.includes('left')?'ліворуч':'праворуч')+on;
-  if(t==='merge')return 'Перестройтесь'+(m?(' '+dirWord(m)):'')+on;
-  if(t==='on ramp')return 'Виїзд на трасу'+on;
-  if(t==='off ramp')return "З'їзд"+on;
-  if(t==='roundabout'||t==='rotary')return 'На кільці'+(s.maneuver.exit?(', '+s.maneuver.exit+'-й з\u0027їзд'):'')+on;
-  if(t==='uturn')return 'Розверніться'+along;
-  if(t==='new name'||t==='continue')return 'Продовжуйте'+along;
-  return name?('Прямуйте по '+name):'Прямуйте далі';
-}
-function maneuverDeg(t,m){
-  if(t==='uturn')return 180;
-  if(t==='arrive'||t==='depart')return 0;
-  return {'left':-90,'right':90,'slight left':-40,'slight right':40,'sharp left':-135,'sharp right':135,'straight':0}[m]||0;
-}
-function fmtShort(m){return m<1000?Math.round(m/10)*10+' м':(m/1000).toFixed(1).replace('.',',')+' км';}
-
-function startNav(){
-  if(!destination)return;
-  navMode=true;arrived=false;stepIndex=0;speakUnlocked=true;
-  steps.forEach(s=>{s._prep=false;s._do=false;});
-  document.body.classList.add('navon');navTop.classList.add('show');navBot.classList.add('show');
-  sceneEl.style.transition='none';        // плавність даємо самі, через інтерполяцію
-  zoom=Math.max(zoom,17);
-  const hd=headingToFollow();targetBearing=hd!=null?-hd:0;smoothBearing=targetBearing;
-  navTargetC=mePos?{...mePos}:{...center};
-  if(mePos){center={...mePos};updateNav();}
-  if(steps.length)speak(steps[0].text);
-  if(!navRAF)navRAF=requestAnimationFrame(navLoop);
-}
-function stopNav(){
-  navMode=false;document.body.classList.remove('navon');
-  navTop.classList.remove('show');navBot.classList.remove('show');
-  if(navRAF){cancelAnimationFrame(navRAF);navRAF=0;}
-  sceneEl.style.transition='';
-  try{speechSynthesis.cancel();}catch{}
-  render();
-}
-function navLoop(){                         // плавне слідування + поворот
-  if(!navMode){navRAF=0;return;}
-  if(navTargetC){
-    center.lat+=(navTargetC.lat-center.lat)*0.18;
-    center.lng+=(navTargetC.lng-center.lng)*0.18;
-  }
-  let d=((targetBearing-smoothBearing+540)%360)-180;
-  smoothBearing+=d*0.16;
-  render();
-  navRAF=requestAnimationFrame(navLoop);
-}
-function navZoom(d){            // ближче маневр → більший зум
-  if(d<80)return 18;
-  if(d<400)return 17;
-  return 16;
-}
-function updateNav(){
-  navTargetC=mePos?{...mePos}:navTargetC;
-  let aimDist;
-  if(steps.length){
-    while(stepIndex<steps.length-1&&distM(mePos.lat,mePos.lng,steps[stepIndex].lat,steps[stepIndex].lng)<25)stepIndex++;
-    const st=steps[stepIndex];aimDist=distM(mePos.lat,mePos.lng,st.lat,st.lng);
-    ntIcon.style.transform='rotate('+st.deg+'deg)';
-    ntPrimary.textContent=st.text;ntDist.textContent='через '+fmtShort(aimDist);
-    const then=steps[stepIndex+1];
-    if(then){ntThen.textContent='Потім: '+then.text;ntThen.classList.add('show');}else ntThen.classList.remove('show');
-    if(voiceOn&&aimDist<=250&&!st._prep){st._prep=true;speak('Через '+speakDist(aimDist)+'. '+st.text);}
-    if(voiceOn&&aimDist<=40&&!st._do){st._do=true;speak(st.text);}
-  }else{ntPrimary.textContent='Прямуйте до місця';ntDist.textContent='';ntThen.classList.remove('show');}
-  const hd=headingToFollow();if(hd!=null)targetBearing=-hd;     // ціль повороту за курсом
-  const rem=remainingMeters();
-  if(aimDist==null)aimDist=rem;
-  const remDur=totalDist?totalDur*(rem/totalDist):rem/11;
-  const eta=new Date(Date.now()+remDur*1000);
-  nbEta.textContent=String(eta.getHours()).padStart(2,'0')+':'+String(eta.getMinutes()).padStart(2,'0');
-  nbMin.textContent=Math.max(1,Math.round(remDur/60));
-  nbKm.textContent=(rem/1000).toFixed(rem<10000?1:0);
-  if(rem<=35&&!arrived){arrived=true;if(voiceOn)speak('Ви прибули до пункту призначення.');}
-  const dz=navZoom(aimDist);                 // автозум на поворотах (з гістерезисом)
-  if(Math.abs(dz-zoom)>=1){zoom=dz;clearTiles();}
-}
-rbGo.onclick=startNav;
-nbStop.onclick=stopNav;
-
-function fmtKm(m){return m<1000?Math.round(m)+' м':(m/1000).toFixed(m<10000?1:0)+' км';}
-function fmtMin(s){const m=Math.round(s/60);return m<60?m+' хв':Math.floor(m/60)+' год '+(m%60)+' хв';}
-
-function showResults(html){resultsEl.innerHTML=html;resultsEl.classList.add('show');}
-function hideResults(){resultsEl.classList.remove('show');}
-
-async function geocode(q){
-  if(!navigator.onLine){showResults('<div class="r msg">Немає інтернету. Адресу можна знайти лише зі зв\u0027язком — зроби це наперед.</div>');return;}
-  showResults('<div class="r msg">Шукаю…</div>');
-  const c=project(center.lat,center.lng,zoom);
-  const tl=unproject(c.x-W,c.y-H,zoom), br=unproject(c.x+W,c.y+H,zoom); // ширша рамка для пріоритету
-  const u=GEOCODE+'?format=json&limit=5&accept-language=uk&countrycodes=ua'+
-    '&viewbox='+[tl.lng,tl.lat,br.lng,br.lat].join(',')+
-    '&q='+encodeURIComponent(q);
-  try{
-    const r=await fetch(u,{headers:{'Accept':'application/json'}});
-    const arr=await r.json();
-    if(!arr.length){showResults('<div class="r msg">Нічого не знайдено. Спробуй уточнити адресу.</div>');return;}
-    showResults(arr.map((it,i)=>{
-      const parts=(it.display_name||'').split(',');
-      const head=parts.slice(0,2).join(',').trim();
-      const tail=parts.slice(2,5).join(',').trim();
-      return `<div class="r" data-i="${i}"><b>${esc(head)}</b><span>${esc(tail)}</span></div>`;
-    }).join(''));
-    resultsEl.querySelectorAll('.r[data-i]').forEach(el=>{
-      el.onclick=()=>{const it=arr[+el.dataset.i];
-        pickDestination({lat:+it.lat,lng:+it.lon,name:(it.display_name||'').split(',').slice(0,2).join(',').trim()});};
-    });
-  }catch{showResults('<div class="r msg">Помилка пошуку. Перевір зв\u0027язок.</div>');}
-}
-function esc(t){return (t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-
-async function pickDestination(d){
-  destination=d;hideResults();qEl.value=d.name;qEl.blur();
-  await buildRoute();
-  arrived=false;lastCue=null;navVoice(true);
-}
-
-async function buildRoute(){
-  if(!destination)return;
-  const A=mePos||center;                     // старт: GPS, інакше центр мапи
-  routebar.classList.add('show');
-  rbName.textContent=destination.name;
-  if(!navigator.onLine){
-    rbMeta.textContent='Немає мережі — показую пряму лінію до точки';
-    routeCoords=[[A.lat,A.lng],[destination.lat,destination.lng]];
-    steps=[];totalDist=0;totalDur=0;rbGo.style.display='';
-    fitBounds(routeCoords);saveRoute();render();return;
-  }
-  rbMeta.textContent='Будую маршрут…';
-  try{
-    const u=ROUTER+`${A.lng},${A.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson&alternatives=3&steps=true`;
-    const r=await fetch(u);const j=await r.json();
-    if(j.code!=='Ok'||!j.routes?.length)throw 0;
-    const rt=j.routes.reduce((a,b)=>b.distance<a.distance?b:a); // найкоротший за відстанню
-    routeCoords=rt.geometry.coordinates.map(c=>[c[1],c[0]]); // [lng,lat]→[lat,lng]
-    const raw=rt.legs?.[0]?.steps||[];
-    steps=raw.map(s=>({lat:s.maneuver.location[1],lng:s.maneuver.location[0],
-      text:uaManeuver(s),deg:maneuverDeg(s.maneuver.type,s.maneuver.modifier),dist:s.distance}));
-    totalDist=rt.distance;totalDur=rt.duration;
-    rbMeta.textContent=`${fmtKm(rt.distance)} • ${fmtMin(rt.duration)} • збережено офлайн`;
-    rbGo.style.display='';
-    fitBounds(routeCoords);saveRoute();render();
-  }catch{
-    rbMeta.textContent='Не вдалось — показую пряму лінію';
-    routeCoords=[[A.lat,A.lng],[destination.lat,destination.lng]];
-    steps=[];totalDist=0;totalDur=0;rbGo.style.display='';
-    fitBounds(routeCoords);saveRoute();render();
-  }
-}
-
-function fitBounds(pts){
-  let minLa=90,maxLa=-90,minLn=180,maxLn=-180;
-  for(const [la,ln] of pts){minLa=Math.min(minLa,la);maxLa=Math.max(maxLa,la);minLn=Math.min(minLn,ln);maxLn=Math.max(maxLn,ln);}
-  center={lat:(minLa+maxLa)/2,lng:(minLn+maxLn)/2};
-  for(let z=MAXZ;z>=MINZ;z--){
-    const a=project(minLa,minLn,z),b=project(maxLa,maxLn,z);
-    if(Math.abs(b.x-a.x)<W*0.82 && Math.abs(b.y-a.y)<H*0.62){zoom=z;break;}
-  }
-  clearTiles();
-}
-
-function saveRoute(){localStorage.setItem('route',JSON.stringify({destination,routeCoords,steps,totalDist,totalDur}));}
-function loadRoute(){
-  const s=JSON.parse(localStorage.getItem('route')||'null');
-  if(s&&s.destination){destination=s.destination;routeCoords=s.routeCoords||[];
-    steps=s.steps||[];totalDist=s.totalDist||0;totalDur=s.totalDur||0;
-    routebar.classList.add('show');rbName.textContent=destination.name;rbGo.style.display='';
-    rbMeta.textContent=routeCoords.length>1?'Збережений маршрут — працює офлайн':'Точку збережено';}
-}
-document.getElementById('rbClear').onclick=()=>{
-  if(navMode)stopNav();
-  destination=null;routeCoords=[];steps=[];totalDist=0;totalDur=0;routebar.classList.remove('show');
-  qEl.value='';localStorage.removeItem('route');render();
-};
-qbtn.onclick=()=>{const v=qEl.value.trim();if(v)geocode(v);};
-qEl.addEventListener('keydown',e=>{if(e.key==='Enter'){const v=qEl.value.trim();if(v)geocode(v);}});
-mapEl.addEventListener('pointerdown',hideResults);
-
-/* ---------- помічник: голос + Gemini ---------- */
-const GEMINI_MODEL='gemini-2.0-flash';   // за потреби заміни на свою модель
-let voiceOn=localStorage.getItem('voice')!=='0';
-let lastCue=null, arrived=false, speakUnlocked=false;
-
-function speak(t){
-  if(!('speechSynthesis' in window)||!t)return;
-  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);
-    u.lang='uk-UA';u.rate=1;u.pitch=1;speechSynthesis.speak(u);}catch{}
-}
-function plUA(n,one,few,many){const a=n%10,b=n%100;
-  if(a===1&&b!==11)return one;
-  if(a>=2&&a<=4&&(b<10||b>=20))return few;
-  return many;}
-function speakDist(m){
-  if(m>=1000){let km=Math.floor(m/1000),rem=Math.round((m%1000)/100)*100;
-    if(rem>=1000){km++;rem=0;}
-    let s=km+' '+plUA(km,'кілометр','кілометри','кілометрів');
-    if(rem>0)s+=' '+rem+' метрів';
-    return s;}
-  const n=Math.max(10,Math.round(m/10)*10);
-  return n+' '+plUA(n,'метр','метри','метрів');}
-function navVoice(force){
-  if(!voiceOn||!(routeCoords.length>1||destination))return;
-  const rem=remainingMeters();
-  if(rem<=35){if(!arrived){arrived=true;speak('Ви прибули до пункту призначення.');}return;}
-  arrived=false;
-  if(force||lastCue==null||Math.abs(lastCue-rem)>=300){
-    lastCue=rem;const hd=headingToFollow();
-    const dir=hd!=null?('Прямуйте на '+compassUA(hd)+'. '):'';
-    speak(dir+'Залишилось '+speakDist(rem)+'.');
-  }
-}
-
-const asstBtn=document.getElementById('asstBtn'),asstBg=document.getElementById('asstBg'),
-      asstMsgs=document.getElementById('asstMsgs'),asstInput=document.getElementById('asstInput'),
-      asstSend=document.getElementById('asstSend'),asstMic=document.getElementById('asstMic'),
-      asstFoot=document.getElementById('asstFoot'),voiceChk=document.getElementById('voiceChk');
-
-voiceChk.checked=voiceOn;
-voiceChk.onchange=()=>{voiceOn=voiceChk.checked;localStorage.setItem('voice',voiceOn?'1':'0');
-  if(voiceOn){speak('Голосові підказки увімкнено.');lastCue=null;navVoice(true);}else speechSynthesis.cancel();};
-
-function footUI(){
-  const has=!!localStorage.getItem('gkey');
-  asstFoot.innerHTML=(has?'Ключ Gemini збережено ✓ • ':'')+
-    `<a id="setKey">${has?'Змінити ключ':'Додати Gemini ключ'}</a> · потрібен інтернет; ключ лише на цьому пристрої`;
-  document.getElementById('setKey').onclick=setKey;
-}
-function setKey(){
-  const k=prompt('Встав свій Gemini API ключ (Google AI Studio). Зберігається лише на цьому пристрої:',
-    localStorage.getItem('gkey')||'');
-  if(k!==null){k.trim()?localStorage.setItem('gkey',k.trim()):localStorage.removeItem('gkey');footUI();}
-}
-function addMsg(role,text){const d=document.createElement('div');d.className='msg '+role;d.textContent=text;
-  asstMsgs.appendChild(d);asstMsgs.scrollTop=asstMsgs.scrollHeight;return d;}
-
-function asstContext(){
-  let c='Ти — голосовий помічник у застосунку офлайн-карти для України під час повітряних тривог. '+
-    'Відповідай українською, спокійно, коротко (1–3 речення), по суті.';
-  if(mePos)c+=` Координати користувача: ${mePos.lat.toFixed(4)}, ${mePos.lng.toFixed(4)}.`;
-  if(destination)c+=` Пункт призначення: ${destination.name}.`;
-  if(routeCoords.length>1&&mePos)c+=` До цілі лишилось ${fmtKm(remainingMeters())}.`;
-  return c;
-}
-async function askGemini(q){
-  const key=localStorage.getItem('gkey');if(!key)return{error:'no-key'};
-  try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        systemInstruction:{parts:[{text:asstContext()}]},
-        contents:[{role:'user',parts:[{text:q}]}],
-        generationConfig:{maxOutputTokens:400,temperature:0.6}
-      })});
-    const j=await r.json();
-    if(j.error)return{error:j.error.message||'API'};
-    const t=j.candidates?.[0]?.content?.parts?.map(p=>p.text).join('').trim();
-    return t?{text:t}:{error:'порожня відповідь'};
-  }catch(e){return{error:'мережа'};}
-}
-async function sendAsst(){
-  const q=asstInput.value.trim();if(!q)return;
-  speakUnlocked=true;addMsg('u',q);asstInput.value='';
-  if(!navigator.onLine){const m='Немає інтернету — помічник відповідає лише зі зв\u0027язком.';addMsg('a',m);speak(m);return;}
-  if(!localStorage.getItem('gkey')){addMsg('a','Спершу додай Gemini API ключ (внизу).');setKey();return;}
-  const wait=addMsg('a','…');
-  const res=await askGemini(q);wait.remove();
-  if(res.error){addMsg('a',res.error==='no-key'?'Додай Gemini ключ внизу.':'Помилка: '+res.error);return;}
-  addMsg('a',res.text);speak(res.text);
-}
-asstBtn.onclick=()=>{asstBg.classList.add('show');footUI();updateTrackInfo();speakUnlocked=true;};
-document.getElementById('trackClear').onclick=clearTrack;
-document.getElementById('asstClose').onclick=()=>asstBg.classList.remove('show');
-asstBg.addEventListener('click',e=>{if(e.target===asstBg)asstBg.classList.remove('show');});
-asstSend.onclick=sendAsst;
-asstInput.addEventListener('keydown',e=>{if(e.key==='Enter')sendAsst();});
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-if(SR){asstMic.onclick=()=>{try{const r=new SR();r.lang='uk-UA';r.interimResults=false;
-  r.onresult=e=>{asstInput.value=e.results[0][0].transcript;sendAsst();};r.start();}catch{}};}
-else asstMic.style.display='none';
-
-/* ---------- камери швидкості ---------- */
-function buildCamEls(){camsEl.innerHTML='';camEls=cameras.map(()=>{const d=document.createElement('div');
-  d.className='cam';d.textContent='📷';camsEl.appendChild(d);return d;});}
-function saveCameras(){localStorage.setItem('cams',JSON.stringify(cameras.map(c=>({lat:c.lat,lng:c.lng}))));}
-function loadCameras(){try{cameras=JSON.parse(localStorage.getItem('cams')||'[]');}catch{cameras=[];}buildCamEls();}
-async function fetchCameras(){
-  if(!navigator.onLine)return 0;
-  const c=project(center.lat,center.lng,zoom);
-  const tl=unproject(c.x-W/2,c.y-H/2,zoom),br=unproject(c.x+W/2,c.y+H/2,zoom);
-  const s=Math.min(tl.lat,br.lat),n=Math.max(tl.lat,br.lat),w=Math.min(tl.lng,br.lng),e=Math.max(tl.lng,br.lng);
-  const ql=`[out:json][timeout:25];node["highway"="speed_camera"](${s},${w},${n},${e});out;`;
-  try{
-    const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(ql)});
-    const j=await r.json();
-    const seen=new Set(cameras.map(c=>c.lat.toFixed(5)+','+c.lng.toFixed(5)));
-    let added=0;
-    for(const el of (j.elements||[])){if(el.lat==null)continue;const k=el.lat.toFixed(5)+','+el.lon.toFixed(5);
-      if(!seen.has(k)){cameras.push({lat:el.lat,lng:el.lon});seen.add(k);added++;}}
-    saveCameras();buildCamEls();render();return added;
-  }catch{return 0;}
-}
-function checkCameras(){
-  if(!voiceOn||!mePos||!cameras.length)return;
-  for(const c of cameras){const d=distM(mePos.lat,mePos.lng,c.lat,c.lng);
-    if(d<300&&!c._warned){c._warned=true;speak('Увага, попереду камера контролю швидкості.');break;}
-    if(d>500)c._warned=false;}
-}
-
-/* ---------- автозапис поїздки ---------- */
-function saveTrack(){try{localStorage.setItem('track',JSON.stringify(track));}catch{}}
-function loadTrack(){try{track=JSON.parse(localStorage.getItem('track')||'[]');}catch{track=[];}}
-function recordTrack(){
-  if(!mePos)return;
-  const last=track[track.length-1];
-  if(!last||distM(last[0],last[1],mePos.lat,mePos.lng)>15){
-    track.push([+mePos.lat.toFixed(5),+mePos.lng.toFixed(5)]);
-    if(track.length>5000)track.shift();
-    saveTrack();
-  }
-}
-function trackMeters(){let m=0;for(let i=1;i<track.length;i++)m+=distM(track[i-1][0],track[i-1][1],track[i][0],track[i][1]);return m;}
-function clearTrack(){track=[];localStorage.removeItem('track');updateTrackInfo();render();}
-function updateTrackInfo(){const el=document.getElementById('trackInfo');
-  if(el)el.textContent='Записаний шлях: '+(track.length>1?fmtKm(trackMeters()):'порожньо');}
-
-/* ---------- перший запуск ---------- */
-const intro=document.getElementById('intro');
-if(localStorage.getItem('intro_done'))intro.classList.add('hide');
-document.getElementById('introGo').onclick=()=>{intro.classList.add('hide');localStorage.setItem('intro_done','1');requestLocation();};
-
-/* ---------- старт ---------- */
-loadRoute();loadCameras();loadTrack();applyTilt();
-render();refreshCount();
-</script>
+                document.getElementById('signalCard').style.display = 'block';
+            }, 800);
+        }
+    </script>
 </body>
 </html>
