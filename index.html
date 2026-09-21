@@ -3,426 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DARK TRADING 2.0 - Live Core</title>
+    <title>Замовлення Таксі</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg-main: #06090e;
-            --card-bg: rgba(13, 18, 30, 0.95);
-            --border-color: rgba(0, 240, 255, 0.15);
-            --neon-blue: #00f0ff;
-            --neon-purple: #9d00ff;
-            --green: #00ff88;
-            --red: #ff2a5f;
-            --text-main: #ffffff;
-            --text-muted: #64748b;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-main);
-            background-image: 
-                radial-gradient(circle at 50% 0%, rgba(157, 0, 255, 0.15) 0%, transparent 60%),
-                radial-gradient(circle at 50% 100%, rgba(0, 240, 255, 0.1) 0%, transparent 60%);
-            color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 16px;
-        }
-
-        .app-container {
-            width: 100%;
-            max-width: 440px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 28px;
-            padding: 24px;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 240, 255, 0.03);
-            backdrop-filter: blur(16px);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .app-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--neon-blue), var(--neon-purple), transparent);
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .brand-logo {
-            width: 42px;
-            height: 42px;
-            background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 20px;
-            color: #fff;
-            box-shadow: 0 0 15px rgba(157, 0, 255, 0.4);
-        }
-
-        .brand-title {
-            font-size: 18px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            background: linear-gradient(90deg, #fff 0%, var(--neon-blue) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .brand-subtitle {
-            font-size: 10px;
-            color: var(--text-muted);
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-        }
-
-        .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--green);
-            background: rgba(0, 255, 136, 0.08);
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: 1px solid rgba(0, 255, 136, 0.2);
-        }
-
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            background-color: var(--green);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--green);
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-label {
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            display: block;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
-
-        select {
-            width: 100%;
-            background: #090e17;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding: 14px 16px;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 600;
-            outline: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        select:focus {
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
-        }
-
-        .btn-submit {
-            width: 100%;
-            background: linear-gradient(135deg, var(--neon-purple), #0066ff);
-            border: none;
-            color: #fff;
-            padding: 16px;
-            border-radius: 16px;
-            font-size: 15px;
-            font-weight: 800;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 0 25px rgba(157, 0, 255, 0.35);
-            transition: transform 0.15s ease, box-shadow 0.2s ease;
-            margin-top: 8px;
-        }
-
-        .btn-submit:active {
-            transform: scale(0.98);
-        }
-
-        .loader-box {
-            display: none;
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        .spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid rgba(0, 240, 255, 0.1);
-            border-top: 3px solid var(--neon-blue);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 10px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loader-text {
-            font-size: 12px;
-            color: var(--neon-blue);
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .signal-card {
-            display: none;
-            margin-top: 20px;
-            background: rgba(9, 14, 23, 0.8);
-            border-radius: 20px;
-            padding: 20px;
-            border: 1px solid var(--border-color);
-            text-align: center;
-            animation: fadeIn 0.4s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .signal-icon-wrap {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            margin: 0 auto 12px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            border: 2px solid;
-            box-shadow: 0 0 20px currentColor;
-        }
-
-        .signal-icon-wrap.up {
-            color: var(--green);
-            border-color: var(--green);
-            background: rgba(0, 255, 136, 0.08);
-        }
-
-        .signal-icon-wrap.down {
-            color: var(--red);
-            border-color: var(--red);
-            background: rgba(255, 42, 95, 0.08);
-        }
-
-        .signal-action {
-            font-size: 22px;
-            font-weight: 900;
-            margin-bottom: 16px;
-            letter-spacing: 0.5px;
-        }
-
-        .data-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .data-item {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            color: var(--text-muted);
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 10px;
-        }
-
-        .data-item span:last-child {
-            color: #fff;
-            font-weight: 700;
-        }
+        body { font-family: sans-serif; padding: 20px; background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-gps { background-color: #28a745; color: white; margin-bottom: 10px; }
+        .btn-submit { background-color: #0088cc; color: white; }
     </style>
 </head>
 <body>
-
-    <div class="app-container">
-        <div class="header">
-            <div class="brand">
-                <div class="brand-logo">D2</div>
-                <div>
-                    <div class="brand-title">DARK TRADING 2.0</div>
-                    <div class="brand-subtitle">VERCEL READY</div>
-                </div>
-            </div>
-            <div class="status-badge">
-                <div class="status-dot"></div>
-                ONLINE
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Валютна пара (Live Market)</label>
-            <select id="pairSelect">
-                <option value="BTCUSDT">BTC/USDT</option>
-                <option value="ETHUSDT">ETH/USDT</option>
-                <option value="SOLUSDT">SOL/USDT</option>
-                <option value="EURUSDT">EUR/USDT</option>
-                <option value="GBPUSDT">GBP/USDT</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Час експірації</label>
-            <select id="tfSelect">
-                <option value="1m">M1 (1 хвилина)</option>
-                <option value="3m">M3 (3 хвилини)</option>
-                <option value="5m">M5 (5 хвилин)</option>
-            </select>
-        </div>
-
-        <button class="btn-submit" onclick="generateLiveSignal()">⚡ Отримати сигнал</button>
-
-        <div class="loader-box" id="loader">
-            <div class="spinner"></div>
-            <div class="loader-text" id="loaderText">Підключення до сервера котирувань...</div>
-        </div>
-
-        <div class="signal-card" id="signalCard">
-            <div class="signal-icon-wrap up" id="signalIcon">⬆</div>
-            <div class="signal-action" id="signalText" style="color: var(--green);">ВВЕРХ (CALL)</div>
-
-            <div class="data-list">
-                <div class="data-item">
-                    <span>Актив:</span>
-                    <span id="resPair">BTC/USDT</span>
-                </div>
-                <div class="data-item">
-                    <span>Поточна ціна:</span>
-                    <span id="resPrice" style="color: var(--neon-blue);">$0.00</span>
-                </div>
-                <div class="data-item">
-                    <span>Показник RSI:</span>
-                    <span id="resRsi">50.0</span>
-                </div>
-                <div class="data-item">
-                    <span>Час угоди:</span>
-                    <span id="resTimeframe">1m</span>
-                </div>
-            </div>
-        </div>
+    <h2>🚕 Замовлення таксі</h2>
+    
+    <div class="form-group">
+        <label>Точка А (Звідки):</label>
+        <button type="button" class="btn-gps" onclick="getGPS()">📍 Вказати точну геопозицію (GPS)</button>
+        <input type="text" id="pointA" placeholder="Введіть адресу або натисніть кнопку вище">
     </div>
 
+    <div class="form-group">
+        <label>Точка Б (Куди):</label>
+        <input type="text" id="pointB" placeholder="Введіть адресу призначення">
+    </div>
+
+    <div class="form-group">
+        <label>Ваша ціна (грн):</label>
+        <input type="number" id="price" placeholder="Наприклад: 150">
+    </div>
+
+    <button type="button" class="btn-submit" onclick="sendOrder()">Замовити</button>
+
     <script>
-        function calculateRSI(closes) {
-            let gains = 0, losses = 0;
-            for (let i = closes.length - 14; i < closes.length; i++) {
-                let diff = closes[i] - closes[i - 1];
-                if (diff >= 0) gains += diff;
-                else losses += Math.abs(diff);
-            }
-            let avgGain = gains / 14;
-            let avgLoss = losses / 14;
-            if (avgLoss === 0) return 100;
-            return 100 - (100 / (1 + (avgGain / avgLoss)));
-        }
+        let tg = window.Telegram.WebApp;
+        tg.expand();
 
-        async function fetchMarketData(symbol, interval) {
-            // Спочатку робимо прямий запит, якщо блокується — беремо проксі
-            const primaryUrl = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=30`;
-            const fallbackUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(primaryUrl)}`;
+        let userCoords = null;
 
-            try {
-                let res = await fetch(primaryUrl);
-                if (!res.ok) throw new Error("Primary API blocked");
-                return await res.json();
-            } catch (err) {
-                console.warn("Direct API failed, trying fallback proxy...", err);
-                let res = await fetch(fallbackUrl);
-                return await res.json();
+        function getGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userCoords = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        document.getElementById('pointA').value = `GPS: ${userCoords.lat.toFixed(5)}, ${userCoords.lng.toFixed(5)}`;
+                        alert("Геопозицію успішно визначено!");
+                    },
+                    (error) => {
+                        alert("Не вдалося отримати GPS. Введіть адресу вручну.");
+                    }
+                );
+            } else {
+                alert("Ваш пристрій не підтримує геолокацію.");
             }
         }
 
-        async function generateLiveSignal() {
-            const pair = document.getElementById('pairSelect').value;
-            const tf = document.getElementById('tfSelect').value;
+        function sendOrder() {
+            const pointA = document.getElementById('pointA').value;
+            const pointB = document.getElementById('pointB').value;
+            const price = document.getElementById('price').value;
 
-            document.getElementById('signalCard').style.display = 'none';
-            document.getElementById('loader').style.display = 'block';
-            document.getElementById('loaderText').innerText = `Завантаження даних для ${pair}...`;
-
-            try {
-                const data = await fetchMarketData(pair, tf);
-                const closePrices = data.map(c => parseFloat(c[4]));
-                const currentPrice = closePrices[closePrices.length - 1];
-
-                const rsi = calculateRSI(closePrices);
-                const sma10 = closePrices.slice(-10).reduce((a, b) => a + b, 0) / 10;
-
-                let isCall = rsi < 40 ? true : (rsi > 60 ? false : currentPrice > sma10);
-
-                const icon = document.getElementById('signalIcon');
-                const text = document.getElementById('signalText');
-
-                if (isCall) {
-                    icon.className = 'signal-icon-wrap up';
-                    icon.innerText = '⬆';
-                    text.innerText = 'ВВЕРХ (CALL)';
-                    text.style.color = 'var(--green)';
-                } else {
-                    icon.className = 'signal-icon-wrap down';
-                    icon.innerText = '⬇';
-                    text.innerText = 'ВНИЗ (PUT)';
-                    text.style.color = 'var(--red)';
-                }
-
-                document.getElementById('resPair').innerText = pair;
-                document.getElementById('resPrice').innerText = `$${currentPrice.toLocaleString()}`;
-                document.getElementById('resRsi').innerText = `${rsi.toFixed(1)} ${rsi < 40 ? '(Купівля)' : rsi > 60 ? '(Продаж)' : '(Нейтрально)'}`;
-                document.getElementById('resTimeframe').innerText = tf;
-
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('signalCard').style.display = 'block';
-
-            } catch (error) {
-                console.error(error);
-                alert("Помилка завантаження котирувань. Оновіть сторінку і спробуйте ще раз.");
-                document.getElementById('loader').style.display = 'none';
+            if (!pointA || !pointB || !price) {
+                alert("Будь ласка, заповніть всі поля!");
+                return;
             }
+
+            const payload = {
+                pointA: pointA,
+                pointB: pointB,
+                price: price,
+                coords: userCoords
+            };
+
+            tg.sendData(JSON.stringify(payload));
         }
     </script>
 </body>
